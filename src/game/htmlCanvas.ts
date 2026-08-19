@@ -48,3 +48,17 @@ export function drawHtmlLayer(
   element.style.transform = transform.toString();
   return transform;
 }
+
+export function drawHtmlSnapshot(
+  context: Pick<CanvasRenderingContext2D, "drawElementImage">,
+  element: HTMLElement,
+  rect: DrawRect,
+): DOMMatrix {
+  return context.drawElementImage(
+    element,
+    rect.x,
+    rect.y,
+    rect.width,
+    rect.height,
+  );
+}

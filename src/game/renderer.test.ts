@@ -7,7 +7,7 @@ function fakeElement(id: string): HTMLElement {
 }
 
 describe("HTML scene compositor", () => {
-  it("draws the HTML backdrop and a visible obstacle before the UI", () => {
+  it("resamples live HTML into echoes and a second camera before interactive UI", () => {
     const calls: string[] = [];
     const transform = {
       toString: () => "matrix(1, 0, 0, 1, 0, 0)",
@@ -16,6 +16,13 @@ describe("HTML scene compositor", () => {
       reset: vi.fn(),
       setTransform: vi.fn(),
       clearRect: vi.fn(),
+      save: vi.fn(),
+      restore: vi.fn(),
+      beginPath: vi.fn(),
+      rect: vi.fn(),
+      clip: vi.fn(),
+      translate: vi.fn(),
+      scale: vi.fn(),
       drawElementImage: vi.fn((element: HTMLElement) => {
         calls.push(element.id);
         return transform;
@@ -30,6 +37,7 @@ describe("HTML scene compositor", () => {
       obstacles: [obstacle],
       overlay: fakeElement("overlay"),
       controls: fakeElement("controls"),
+      scope: fakeElement("scope"),
     };
     const state = createGameState();
     startGame(state);
@@ -48,8 +56,15 @@ describe("HTML scene compositor", () => {
     expect(calls).toEqual([
       "backdrop",
       "runner",
+      "runner",
+      "runner",
+      "runner",
+      "obstacle",
+      "backdrop",
+      "runner",
       "obstacle",
       "hud",
+      "scope",
       "controls",
     ]);
     expect(context.drawElementImage).toHaveBeenCalledWith(
@@ -59,5 +74,9 @@ describe("HTML scene compositor", () => {
       52,
       70,
     );
+    expect(calls.filter((id) => id === "backdrop")).toHaveLength(2);
+    expect(calls.filter((id) => id === "runner")).toHaveLength(5);
+    expect(calls.filter((id) => id === "obstacle")).toHaveLength(2);
+    expect(layers.scope.style.transform).toContain("matrix");
   });
 });

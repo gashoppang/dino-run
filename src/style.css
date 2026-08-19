@@ -575,6 +575,142 @@ button {
 .obstacle.is-bird.wing-down .bird-art i:nth-child(4) {
   top: 52%;
 }
+.dom-scope {
+  width: 238px;
+  height: 110px;
+  overflow: hidden;
+  border: 1px solid rgba(117, 194, 178, 0.8);
+  border-radius: 10px;
+  color: #a9e3d7;
+  background:
+    linear-gradient(90deg, rgba(117, 194, 178, 0.1), transparent 36%),
+    transparent;
+  box-shadow:
+    inset 0 0 0 1px rgba(10, 24, 28, 0.68),
+    0 0 20px rgba(66, 175, 157, 0.15);
+  font-family: "IBM Plex Mono", monospace;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.dom-scope::before,
+.dom-scope::after {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  width: 15px;
+  height: 5px;
+  border-top: 2px solid #75c2b2;
+}
+.dom-scope::before {
+  left: 6px;
+  top: 32px;
+  border-left: 2px solid #75c2b2;
+}
+.dom-scope::after {
+  right: 6px;
+  bottom: 6px;
+  border-right: 2px solid #75c2b2;
+  transform: rotate(180deg);
+}
+
+.scope-head {
+  position: relative;
+  z-index: 4;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 5px 4px 9px;
+  background: rgba(11, 25, 29, 0.9);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.scope-head span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.scope-head span i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #75c2b2;
+  box-shadow: 0 0 8px #75c2b2;
+}
+.scope-head button {
+  padding: 4px 7px;
+  border: 1px solid rgba(117, 194, 178, 0.55);
+  border-radius: 4px;
+  color: #a9e3d7;
+  background: #162a2f;
+  font: 700 7px/1 "IBM Plex Mono", monospace;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+.scope-head button:focus-visible {
+  outline: 2px solid #ffe0a8;
+  outline-offset: 1px;
+}
+.is-echo-off .scope-head button {
+  color: #71898a;
+  border-color: #526669;
+}
+
+.scope-grid {
+  position: absolute;
+  z-index: 2;
+  inset: 26px 4px 4px;
+  pointer-events: none;
+  background:
+    linear-gradient(rgba(117, 194, 178, 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(117, 194, 178, 0.09) 1px, transparent 1px);
+  background-size: 19px 16px;
+  box-shadow: inset 0 0 22px rgba(5, 17, 20, 0.7);
+}
+
+.scope-foot {
+  position: absolute;
+  z-index: 5;
+  left: 9px;
+  right: 9px;
+  bottom: 7px;
+  display: grid;
+  grid-template-columns: 66px 1fr;
+  grid-template-areas: "readout label" "readout meter";
+  gap: 2px 7px;
+  align-items: center;
+}
+.scope-foot output {
+  grid-area: readout;
+  color: #ffe0a8;
+  font-size: 8px;
+  font-weight: 700;
+  text-shadow: 0 1px 3px #071316;
+}
+.scope-foot label {
+  grid-area: label;
+  font-size: 6px;
+  letter-spacing: 0.12em;
+}
+.scope-foot meter {
+  grid-area: meter;
+  width: 100%;
+  height: 6px;
+  accent-color: #75c2b2;
+}
+.dom-scope.is-danger {
+  border-color: #ff9a78;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 154, 120, 0.45),
+    0 0 22px rgba(255, 108, 88, 0.35);
+}
+.dom-scope.is-danger .scope-head span i {
+  background: #ff9a78;
+  box-shadow: 0 0 9px #ff684f;
+}
 
 .game-overlay {
   width: 420px;

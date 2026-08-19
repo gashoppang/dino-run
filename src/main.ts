@@ -41,7 +41,7 @@ function sceneMarkup(): string {
       <header class="page-heading">
         <p class="eyebrow">EXPERIMENTAL WEB GAME</p>
         <h1 id="game-title">Sunset Dino Run</h1>
-        <p>진짜 HTML이 픽셀 세계 안을 달립니다.</p>
+        <p>하나의 DOM 세계를 두 개의 카메라와 시간 잔상으로 재합성합니다.</p>
       </header>
       <div class="canvas-frame">
         <canvas id="game-canvas" layoutsubtree aria-label="Sunset Dino Run 게임 화면" tabindex="0">
@@ -63,7 +63,7 @@ function sceneMarkup(): string {
           <div class="canvas-layer hud" aria-live="polite">
             <div class="score-block"><span>SCORE</span><strong id="score">00000</strong></div>
             <div class="score-block best"><span>BEST</span><strong id="best-score">00000</strong></div>
-            <div class="tech-badge"><i></i><span>DOM SCENE → CANVAS</span><b>8+ HTML LAYERS</b></div>
+            <div class="tech-badge"><i></i><span>LIVE DOM → 2 CAMERAS</span><b>RESAMPLED</b></div>
           </div>
           <div class="canvas-layer runner" aria-label="달리는 픽셀 공룡" role="img">
             <span class="runner-tail"></span><span class="runner-body"></span>
@@ -72,6 +72,18 @@ function sceneMarkup(): string {
             <span class="runner-leg runner-leg-a"></span><span class="runner-leg runner-leg-b"></span>
           </div>
           ${Array.from({ length: OBSTACLE_LAYER_COUNT }, (_, index) => obstacleMarkup(index)).join("")}
+          <aside class="canvas-layer dom-scope" aria-label="HTML-in-Canvas 실시간 재합성 스코프">
+            <div class="scope-head">
+              <span><i></i> DOM RECOMPOSITE</span>
+              <button id="echo-button" type="button" aria-pressed="true">ECHO ON</button>
+            </div>
+            <div class="scope-grid" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+            <div class="scope-foot">
+              <output id="scope-output" aria-live="polite">SCAN CLEAR</output>
+              <label for="danger-meter">PROXIMITY</label>
+              <meter id="danger-meter" min="0" max="100" low="35" high="70" optimum="0" value="0">0%</meter>
+            </div>
+          </aside>
           <section class="canvas-layer game-overlay" aria-live="assertive">
             <p class="overlay-kicker" id="overlay-kicker">SUNSET PROTOCOL</p>
             <h2 id="overlay-title">달릴 준비됐나요?</h2>
@@ -86,7 +98,7 @@ function sceneMarkup(): string {
         </canvas>
       </div>
       <footer class="game-meta">
-        <span><i class="status-dot"></i> CANARY LAB</span>
+        <span><i class="status-dot"></i> DOM SCOPE LIVE</span>
         <span>SPACE / ↑ JUMP</span>
         <span>↓ DUCK</span>
       </footer>
@@ -135,6 +147,9 @@ function initializeGame(): void {
   let animationFrame = 0;
   let lastSavedBest = state.bestScore;
 
+  let effectsEnabled = !window.matchMedia(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
   const score = requireElement<HTMLElement>("#score");
   const bestScore = requireElement<HTMLElement>("#best-score");
   const overlay = requireElement<HTMLElement>(".game-overlay");
@@ -146,6 +161,9 @@ function initializeGame(): void {
   const obstacleLayers = Array.from(
     document.querySelectorAll<HTMLElement>(".obstacle"),
   );
+  const scopeOutput = requireElement<HTMLOutputElement>("#scope-output");
+  const dangerMeter = requireElement<HTMLMeterElement>("#danger-meter");
+  const echoButton = requireElement<HTMLButtonElement>("#echo-button");
   const layers: GameLayers = {
     backdrop: requireElement<HTMLElement>(".world-backdrop"),
     hud: requireElement<HTMLElement>(".hud"),
@@ -153,9 +171,16 @@ function initializeGame(): void {
     obstacles: obstacleLayers,
     overlay,
     controls: requireElement<HTMLElement>(".touch-controls"),
+    scope: requireElement<HTMLElement>(".dom-scope"),
   };
 
-  const render = createRenderer(canvas, context, layers, () => state);
+  const render = createRenderer(
+    canvas,
+    context,
+    layers,
+    () => state,
+    () => effectsEnabled,
+  );
   canvas.onpaint = render;
 
   function updateDom(): void {
@@ -186,6 +211,24 @@ function initializeGame(): void {
         obstacle?.kind === "bird" && Math.floor(state.elapsed * 8) % 2 === 1,
       );
     });
+
+    const nextObstacle = state.obstacles
+      .filter((obstacle) => obstacle.x + obstacle.width >= state.runner.x)
+      .sort((a, b) => a.x - b.x)[0];
+    const gap = nextObstacle
+      ? Math.max(0, nextObstacle.x - state.runner.x - state.runner.width)
+      : Number.POSITIVE_INFINITY;
+    const proximity = Number.isFinite(gap)
+      ? Math.round(Math.max(0, Math.min(100, 100 - gap / 3.4)))
+      : 0;
+    dangerMeter.value = proximity;
+    scopeOutput.value = nextObstacle
+      ? `${nextObstacle.kind === "bird" ? "AIR" : "GROUND"} ${Math.round(gap)}M`
+      : "SCAN CLEAR";
+    layers.scope.classList.toggle("is-danger", proximity >= 70);
+    layers.scope.classList.toggle("is-echo-off", !effectsEnabled);
+    echoButton.textContent = effectsEnabled ? "ECHO ON" : "ECHO OFF";
+    echoButton.setAttribute("aria-pressed", String(effectsEnabled));
 
     overlay.classList.toggle("is-visible", state.phase !== "running");
     if (state.phase === "ready") {
@@ -266,6 +309,11 @@ function initializeGame(): void {
     event.preventDefault();
     if (state.phase === "running") jump(state);
     else beginOrResume();
+  });
+  echoButton.addEventListener("click", () => {
+    effectsEnabled = !effectsEnabled;
+    updateDom();
+    canvas.requestPaint();
   });
   duckButton.addEventListener("pointerdown", (event) => {
     event.preventDefault();
