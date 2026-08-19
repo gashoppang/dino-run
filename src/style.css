@@ -1,0 +1,596 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&family=Manrope:wght@500;600;700;800&display=swap");
+
+:root {
+  color: #f8e1b6;
+  background: #11191d;
+  font-family: "Manrope", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-width: 320px;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  min-height: 100vh;
+  overflow-x: hidden;
+  background:
+    radial-gradient(
+      circle at 50% 30%,
+      rgba(241, 139, 110, 0.08),
+      transparent 34rem
+    ),
+    #11191d;
+}
+
+button,
+a {
+  font: inherit;
+}
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+#app {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: clamp(24px, 5vw, 64px) 18px;
+}
+
+.game-shell {
+  width: min(1120px, 100%);
+}
+
+.page-heading {
+  margin: 0 0 24px 4px;
+}
+.page-heading h1,
+.unsupported h1 {
+  margin: 4px 0 6px;
+  color: #fff0cf;
+  font-size: clamp(2rem, 5vw, 4.25rem);
+  line-height: 0.96;
+  letter-spacing: -0.055em;
+}
+.page-heading > p:last-child {
+  margin: 0;
+  color: #9cb0af;
+}
+
+.eyebrow {
+  margin: 0;
+  color: #ef816d;
+  font:
+    700 0.72rem/1.2 "IBM Plex Mono",
+    monospace;
+  letter-spacing: 0.19em;
+}
+
+.canvas-frame {
+  overflow: hidden;
+  padding: 8px;
+  border: 1px solid rgba(242, 151, 119, 0.62);
+  border-radius: 25px;
+  background: #192329;
+  box-shadow:
+    0 34px 90px rgba(0, 0, 0, 0.42),
+    inset 0 0 0 1px rgba(255, 231, 194, 0.04);
+}
+
+#game-canvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 18px;
+  outline: none;
+  touch-action: manipulation;
+}
+
+#game-canvas:focus-visible {
+  box-shadow: inset 0 0 0 4px #f7d9a5;
+}
+
+.canvas-layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  margin: 0;
+  transform-origin: 0 0;
+  contain: layout paint style;
+}
+
+.hud {
+  width: 252px;
+  height: 104px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  color: #f8e1b6;
+  font-family: "IBM Plex Mono", monospace;
+}
+
+.score-block {
+  display: grid;
+  gap: 2px;
+  padding: 9px 12px;
+  border: 1px solid rgba(248, 225, 182, 0.36);
+  border-radius: 8px;
+  background: rgba(20, 31, 35, 0.78);
+}
+.score-block span {
+  color: #87aaa5;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+}
+.score-block strong {
+  font-size: 19px;
+  letter-spacing: 0.08em;
+}
+.score-block.best strong {
+  color: #f39776;
+}
+
+.tech-badge {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 10px;
+  border: 1px solid rgba(103, 184, 170, 0.52);
+  border-radius: 8px;
+  color: #75c2b2;
+  background: rgba(20, 31, 35, 0.88);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+}
+.tech-badge i {
+  width: 16px;
+  height: 16px;
+  border: 3px solid currentColor;
+  box-shadow:
+    -5px 0 0 -3px currentColor,
+    5px 0 0 -3px currentColor;
+}
+
+.runner {
+  width: 68px;
+  height: 82px;
+  color: #1e3035;
+}
+.runner span {
+  position: absolute;
+  display: block;
+  background: currentColor;
+}
+.runner-head {
+  top: 2px;
+  left: 28px;
+  width: 36px;
+  height: 31px;
+}
+.runner-head::after {
+  content: "";
+  position: absolute;
+  right: -4px;
+  bottom: -8px;
+  width: 24px;
+  height: 10px;
+  background: currentColor;
+}
+.runner-eye {
+  top: 8px;
+  left: 52px;
+  width: 5px;
+  height: 5px;
+  background: #f7d9a5 !important;
+}
+.runner-mouth {
+  top: 26px;
+  left: 52px;
+  width: 16px;
+  height: 4px;
+  background: #f7d9a5 !important;
+}
+.runner-body {
+  top: 27px;
+  left: 20px;
+  width: 36px;
+  height: 36px;
+}
+.runner-tail {
+  top: 35px;
+  left: 4px;
+  width: 28px;
+  height: 13px;
+  box-shadow: -9px -7px 0 -2px currentColor;
+}
+.runner-arm {
+  top: 42px;
+  left: 48px;
+  width: 17px;
+  height: 7px;
+  box-shadow: 10px 6px 0 -2px currentColor;
+}
+.runner-leg {
+  top: 60px;
+  width: 11px;
+  height: 21px;
+}
+.runner-leg-a {
+  left: 24px;
+}
+.runner-leg-b {
+  left: 44px;
+  height: 15px;
+}
+.runner.step-b .runner-leg-a {
+  height: 14px;
+}
+.runner.step-b .runner-leg-b {
+  height: 22px;
+}
+.runner.is-airborne .runner-leg-a {
+  top: 61px;
+  height: 13px;
+}
+.runner.is-airborne .runner-leg-b {
+  top: 59px;
+  height: 13px;
+}
+.runner.is-ducking .runner-head {
+  top: 10px;
+  left: 33px;
+  height: 26px;
+}
+.runner.is-ducking .runner-body {
+  top: 16px;
+  left: 12px;
+  width: 43px;
+  height: 25px;
+}
+.runner.is-ducking .runner-tail {
+  top: 20px;
+  left: 0;
+}
+.runner.is-ducking .runner-arm {
+  top: 26px;
+}
+.runner.is-ducking .runner-leg {
+  top: 38px;
+  height: 9px;
+}
+
+.obstacle {
+  opacity: 0;
+  color: #26373d;
+}
+.obstacle.is-active {
+  opacity: 1;
+}
+.cactus-art,
+.bird-art {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.cactus-art i,
+.bird-art i {
+  position: absolute;
+  display: block;
+  background: currentColor;
+}
+.cactus-art i:nth-child(1) {
+  left: 42%;
+  top: 0;
+  width: 18%;
+  height: 100%;
+}
+.cactus-art i:nth-child(2) {
+  left: 18%;
+  top: 31%;
+  width: 24%;
+  height: 13%;
+}
+.cactus-art i:nth-child(3) {
+  left: 16%;
+  top: 19%;
+  width: 13%;
+  height: 38%;
+}
+.cactus-art i:nth-child(4) {
+  left: 60%;
+  top: 43%;
+  width: 24%;
+  height: 13%;
+  box-shadow: 11px -12px 0 -3px currentColor;
+}
+.bird-art {
+  display: none;
+}
+.obstacle.is-bird .cactus-art {
+  display: none;
+}
+.obstacle.is-bird .bird-art {
+  display: block;
+}
+.bird-art i:nth-child(1) {
+  left: 27%;
+  top: 39%;
+  width: 45%;
+  height: 34%;
+}
+.bird-art i:nth-child(2) {
+  left: 64%;
+  top: 31%;
+  width: 25%;
+  height: 28%;
+}
+.bird-art i:nth-child(3) {
+  left: 86%;
+  top: 42%;
+  width: 13%;
+  height: 8%;
+}
+.bird-art i:nth-child(4) {
+  left: 18%;
+  top: 10%;
+  width: 43%;
+  height: 31%;
+}
+.bird-art i:nth-child(5) {
+  left: 7%;
+  top: 66%;
+  width: 36%;
+  height: 15%;
+}
+.obstacle.is-bird.wing-down .bird-art i:nth-child(4) {
+  top: 52%;
+}
+
+.game-overlay {
+  width: 420px;
+  height: 224px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 9px;
+  padding: 22px;
+  border: 2px solid #ef816d;
+  border-radius: 14px;
+  color: #fff0cf;
+  background: rgba(23, 35, 41, 0.94);
+  box-shadow: 10px 10px 0 rgba(28, 48, 53, 0.7);
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+}
+.game-overlay.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.overlay-kicker {
+  margin: 0;
+  color: #77c2b2;
+  font:
+    700 10px/1 "IBM Plex Mono",
+    monospace;
+  letter-spacing: 0.18em;
+}
+.game-overlay h2 {
+  margin: 0;
+  font-size: 28px;
+  letter-spacing: -0.035em;
+}
+.game-overlay > p:not(.overlay-kicker):not(.key-hint) {
+  margin: 0;
+  color: #b8c5bc;
+  font-size: 13px;
+}
+.game-overlay button {
+  margin-top: 4px;
+  padding: 10px 24px;
+  border: 0;
+  border-radius: 7px;
+  color: #172329;
+  background: #f39877;
+  box-shadow: 0 4px 0 #a84f4c;
+  font-weight: 800;
+  cursor: pointer;
+}
+.game-overlay button:focus-visible {
+  outline: 3px solid #7ac6b7;
+  outline-offset: 3px;
+}
+.key-hint {
+  margin: 5px 0 0;
+  color: #7d9796;
+  font:
+    600 9px/1 "IBM Plex Mono",
+    monospace;
+  letter-spacing: 0.08em;
+}
+kbd {
+  padding: 2px 5px;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  font: inherit;
+}
+
+.touch-controls {
+  width: 210px;
+  height: 72px;
+  display: flex;
+  gap: 10px;
+}
+.touch-controls button {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 2px;
+  border: 1px solid rgba(248, 225, 182, 0.45);
+  border-radius: 10px;
+  color: #f8e1b6;
+  background: rgba(23, 35, 41, 0.72);
+  font:
+    700 22px/1 "IBM Plex Mono",
+    monospace;
+  cursor: pointer;
+}
+.touch-controls button:last-child {
+  border-color: #ef816d;
+  color: #f39877;
+}
+.touch-controls span {
+  font-size: 8px;
+  letter-spacing: 0.14em;
+}
+
+.game-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px 9px 0;
+  color: #708788;
+  font:
+    600 0.66rem/1.2 "IBM Plex Mono",
+    monospace;
+  letter-spacing: 0.1em;
+}
+.status-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: #73beae;
+  box-shadow: 0 0 12px #73beae;
+}
+
+.unsupported {
+  width: min(700px, 100%);
+  padding: clamp(28px, 7vw, 64px);
+  border: 1px solid rgba(239, 129, 109, 0.55);
+  border-radius: 28px;
+  background: linear-gradient(145deg, #192329, #121b20);
+  box-shadow: 0 36px 100px rgba(0, 0, 0, 0.42);
+}
+.unsupported h1 {
+  max-width: 600px;
+  margin-top: 12px;
+}
+.unsupported-lead {
+  color: #a7b9b5;
+  font-size: 1.05rem;
+}
+.unsupported ol {
+  display: grid;
+  gap: 12px;
+  margin: 28px 0;
+  padding-left: 24px;
+  color: #d7d4bc;
+}
+.unsupported li {
+  padding-left: 8px;
+}
+.unsupported code {
+  padding: 3px 7px;
+  border-radius: 5px;
+  color: #7ac6b7;
+  background: #0e171b;
+  font-family: "IBM Plex Mono", monospace;
+}
+.unsupported a {
+  color: #f39877;
+  font-weight: 800;
+  text-underline-offset: 5px;
+}
+.support-check {
+  margin: 28px 0 0;
+  padding-top: 18px;
+  border-top: 1px solid #2b3a3f;
+  color: #71898a;
+  font:
+    600 0.72rem/1.5 "IBM Plex Mono",
+    monospace;
+}
+.support-check strong {
+  color: #ef816d;
+}
+.unsupported-icon {
+  position: relative;
+  width: 68px;
+  height: 68px;
+  margin-bottom: 24px;
+  border: 3px solid #73beae;
+  border-radius: 12px;
+  box-shadow:
+    inset 0 0 0 8px #192329,
+    inset 0 0 0 11px #73beae;
+}
+.unsupported-icon i {
+  position: absolute;
+  width: 8px;
+  height: 4px;
+  background: #73beae;
+}
+.unsupported-icon i:nth-child(1) {
+  left: -8px;
+  top: 16px;
+  box-shadow:
+    0 17px #73beae,
+    0 34px #73beae;
+}
+.unsupported-icon i:nth-child(2) {
+  right: -8px;
+  top: 16px;
+  box-shadow:
+    0 17px #73beae,
+    0 34px #73beae;
+}
+.unsupported-icon i:nth-child(3) {
+  left: 28px;
+  top: -8px;
+  box-shadow: 0 68px #73beae;
+}
+
+@media (max-width: 680px) {
+  #app {
+    padding-inline: 10px;
+  }
+  .page-heading {
+    margin-bottom: 15px;
+  }
+  .canvas-frame {
+    padding: 4px;
+    border-radius: 15px;
+  }
+  #game-canvas {
+    border-radius: 11px;
+  }
+  .game-meta {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .unsupported code {
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
