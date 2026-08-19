@@ -1,6 +1,8 @@
 # Sunset Dino Run
 
-Chrome의 오프라인 공룡 러너에서 영감을 받아 독자적으로 제작한 모던 선셋 픽셀 게임입니다. 배경과 지면은 Canvas 2D로 그리고, 공룡·장애물·점수·버튼은 실제 HTML 요소를 실험적인 **HTML-in-Canvas API**로 Canvas 안에 합성합니다.
+Chrome의 오프라인 공룡 러너에서 영감을 받아 독자적으로 제작한 모던 선셋 픽셀 게임입니다. 석양·구름·산맥·지면부터 공룡·장애물·점수·버튼까지 모두 실제 HTML 요소로 구성하고, 실험적인 **HTML-in-Canvas API**로 Canvas 안에 합성합니다.
+
+Canvas 2D 컨텍스트는 화면을 직접 그리지 않고 HTML 레이어의 합성 순서와 좌표계만 관리합니다.
 
 > 이 프로젝트는 폴백 없는 실험 데모입니다. 일반 Chrome에서는 게임 대신 활성화 안내 화면이 표시됩니다.
 
@@ -40,7 +42,7 @@ npm run build
 
 - `src/game/engine.ts`: 프레임워크와 DOM에 독립적인 게임 상태·물리·충돌 로직
 - `src/game/htmlCanvas.ts`: 실험 API 기능 감지와 DOMMatrix 동기화 어댑터
-- `src/game/renderer.ts`: Canvas 2D 배경과 HTML 레이어 합성
+- `src/game/renderer.ts`: HTML 배경·게임 오브젝트·UI 레이어의 Canvas 합성
 - `src/main.ts`: DOM 구성, 입력, 게임 루프, 최고 점수 저장
 
 최고 점수는 현재 브라우저의 `dino-run:high-score:v1` 로컬 스토리지 키에만 저장됩니다.

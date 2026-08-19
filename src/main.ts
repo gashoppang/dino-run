@@ -45,10 +45,25 @@ function sceneMarkup(): string {
       </header>
       <div class="canvas-frame">
         <canvas id="game-canvas" layoutsubtree aria-label="Sunset Dino Run 게임 화면" tabindex="0">
+          <div class="canvas-layer world-backdrop" role="img" aria-label="석양과 산맥이 펼쳐진 픽셀 사막">
+            <div class="world-sun" aria-hidden="true">
+              <i></i><i></i><i></i><i></i><i></i>
+            </div>
+            <div class="world-cloud cloud-a" aria-hidden="true"><i></i><i></i><i></i></div>
+            <div class="world-cloud cloud-b" aria-hidden="true"><i></i><i></i><i></i></div>
+            <div class="world-cloud cloud-c" aria-hidden="true"><i></i><i></i><i></i></div>
+            <div class="world-cloud cloud-d" aria-hidden="true"><i></i><i></i><i></i></div>
+            <div class="mountain-range mountain-back" aria-hidden="true"></div>
+            <div class="mountain-range mountain-front" aria-hidden="true"></div>
+            <div class="world-ground" aria-hidden="true">
+              <span></span><span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+          </div>
           <div class="canvas-layer hud" aria-live="polite">
             <div class="score-block"><span>SCORE</span><strong id="score">00000</strong></div>
             <div class="score-block best"><span>BEST</span><strong id="best-score">00000</strong></div>
-            <div class="tech-badge"><i></i><span>HTML IN CANVAS</span></div>
+            <div class="tech-badge"><i></i><span>DOM SCENE → CANVAS</span><b>8+ HTML LAYERS</b></div>
           </div>
           <div class="canvas-layer runner" aria-label="달리는 픽셀 공룡" role="img">
             <span class="runner-tail"></span><span class="runner-body"></span>
@@ -132,6 +147,7 @@ function initializeGame(): void {
     document.querySelectorAll<HTMLElement>(".obstacle"),
   );
   const layers: GameLayers = {
+    backdrop: requireElement<HTMLElement>(".world-backdrop"),
     hud: requireElement<HTMLElement>(".hud"),
     runner,
     obstacles: obstacleLayers,
@@ -145,6 +161,18 @@ function initializeGame(): void {
   function updateDom(): void {
     score.textContent = formatScore(state.score);
     bestScore.textContent = formatScore(state.bestScore);
+    layers.backdrop.style.setProperty(
+      "--cloud-shift-a",
+      `${-((state.distance * 0.035) % 320)}px`,
+    );
+    layers.backdrop.style.setProperty(
+      "--cloud-shift-b",
+      `${-((state.distance * 0.018) % 180)}px`,
+    );
+    layers.backdrop.style.setProperty(
+      "--ground-shift",
+      `${-(state.distance % 54)}px`,
+    );
     runner.classList.toggle("is-ducking", state.runner.ducking);
     runner.classList.toggle("is-airborne", !state.runner.grounded);
     runner.classList.toggle("step-b", Math.floor(state.elapsed * 10) % 2 === 1);

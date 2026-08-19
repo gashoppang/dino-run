@@ -108,6 +108,211 @@ button {
   contain: layout paint style;
 }
 
+.world-backdrop {
+  --cloud-shift-a: 0px;
+  --cloud-shift-b: 0px;
+  --ground-shift: 0px;
+  width: 960px;
+  height: 540px;
+  overflow: hidden;
+  background: linear-gradient(
+    180deg,
+    #172329 0%,
+    #9f5650 52%,
+    #f18b6e 80%,
+    #f6ca91 100%
+  );
+}
+
+.world-sun {
+  position: absolute;
+  left: 627px;
+  top: 278px;
+  width: 138px;
+  height: 74px;
+  overflow: hidden;
+  border-radius: 69px 69px 0 0;
+  background: rgba(255, 227, 166, 0.9);
+}
+
+.world-sun i {
+  position: absolute;
+  left: 5px;
+  width: 128px;
+  height: 4px;
+  background: rgba(159, 86, 80, 0.35);
+}
+.world-sun i:nth-child(1) {
+  bottom: 10px;
+}
+.world-sun i:nth-child(2) {
+  bottom: 22px;
+  left: 9px;
+  width: 120px;
+}
+.world-sun i:nth-child(3) {
+  bottom: 34px;
+  left: 13px;
+  width: 112px;
+}
+.world-sun i:nth-child(4) {
+  bottom: 46px;
+  left: 18px;
+  width: 102px;
+}
+.world-sun i:nth-child(5) {
+  bottom: 58px;
+  left: 25px;
+  width: 88px;
+}
+
+.world-cloud {
+  position: absolute;
+  width: 78px;
+  height: 30px;
+  opacity: 0.32;
+  color: #f7d9a5;
+}
+.world-cloud i {
+  position: absolute;
+  display: block;
+  background: currentColor;
+}
+.world-cloud i:nth-child(1) {
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 8px;
+}
+.world-cloud i:nth-child(2) {
+  left: 14%;
+  bottom: 8px;
+  width: 58%;
+  height: 9px;
+}
+.world-cloud i:nth-child(3) {
+  left: 34%;
+  bottom: 17px;
+  width: 29%;
+  height: 9px;
+}
+.cloud-a {
+  left: calc(68px + var(--cloud-shift-a));
+  top: 112px;
+}
+.cloud-b {
+  left: calc(388px + var(--cloud-shift-b));
+  top: 178px;
+  width: 58px;
+  opacity: 0.25;
+}
+.cloud-c {
+  left: calc(760px + var(--cloud-shift-b));
+  top: 92px;
+  width: 70px;
+  opacity: 0.38;
+}
+.cloud-d {
+  left: calc(1020px + var(--cloud-shift-a));
+  top: 142px;
+}
+
+.mountain-range {
+  position: absolute;
+  left: 0;
+  width: 960px;
+  pointer-events: none;
+}
+.mountain-back {
+  bottom: 120px;
+  height: 154px;
+  opacity: 0.62;
+  background: #66716f;
+  clip-path: polygon(
+    0 100%,
+    0 72%,
+    10% 23%,
+    19% 72%,
+    28% 39%,
+    39% 81%,
+    49% 45%,
+    62% 82%,
+    74% 20%,
+    86% 75%,
+    100% 34%,
+    100% 100%
+  );
+}
+.mountain-front {
+  bottom: 120px;
+  height: 108px;
+  background: #435056;
+  clip-path: polygon(
+    0 100%,
+    0 78%,
+    12% 37%,
+    23% 82%,
+    36% 48%,
+    48% 88%,
+    61% 38%,
+    72% 82%,
+    84% 35%,
+    100% 75%,
+    100% 100%
+  );
+}
+
+.world-ground {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 960px;
+  height: 120px;
+  border-top: 4px solid #f5c68d;
+  background: #26373d;
+  overflow: hidden;
+}
+.world-ground span {
+  position: absolute;
+  top: 22px;
+  left: calc(var(--ground-shift) + var(--track-x));
+  width: 8px;
+  height: 4px;
+  color: rgba(246, 202, 145, 0.62);
+  background: currentColor;
+  box-shadow: 22px 25px 0 -2px currentColor;
+}
+.world-ground span:nth-child(1) {
+  --track-x: 0px;
+}
+.world-ground span:nth-child(2) {
+  --track-x: 108px;
+}
+.world-ground span:nth-child(3) {
+  --track-x: 216px;
+}
+.world-ground span:nth-child(4) {
+  --track-x: 324px;
+}
+.world-ground span:nth-child(5) {
+  --track-x: 432px;
+}
+.world-ground span:nth-child(6) {
+  --track-x: 540px;
+}
+.world-ground span:nth-child(7) {
+  --track-x: 648px;
+}
+.world-ground span:nth-child(8) {
+  --track-x: 756px;
+}
+.world-ground span:nth-child(9) {
+  --track-x: 864px;
+}
+.world-ground span:nth-child(10) {
+  --track-x: 972px;
+}
+
 .hud {
   width: 252px;
   height: 104px;
@@ -149,10 +354,21 @@ button {
   border-radius: 8px;
   color: #75c2b2;
   background: rgba(20, 31, 35, 0.88);
-  font-size: 10px;
+  font-size: 9px;
   letter-spacing: 0.1em;
 }
+.tech-badge span {
+  white-space: nowrap;
+}
+.tech-badge b {
+  margin-left: auto;
+  color: #ef816d;
+  font-size: 7px;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
 .tech-badge i {
+  flex: 0 0 auto;
   width: 16px;
   height: 16px;
   border: 3px solid currentColor;
@@ -270,8 +486,12 @@ button {
 }
 
 .obstacle {
+  width: 88px;
+  height: 88px;
+  overflow: hidden;
   opacity: 0;
-  color: #26373d;
+  color: #152b30;
+  filter: drop-shadow(3px 3px 0 rgba(246, 202, 145, 0.48));
 }
 .obstacle.is-active {
   opacity: 1;
