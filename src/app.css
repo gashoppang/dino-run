@@ -1,0 +1,245 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@500;600;700&family=Space+Mono:wght@400;700&display=swap");
+
+:root {
+  color: #f9e8bd;
+  background: #0d1c23;
+  font-family: "DM Sans", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* { box-sizing: border-box; }
+html, body { min-width: 320px; min-height: 100%; margin: 0; }
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(226, 105, 87, 0.14), transparent 38rem),
+    linear-gradient(180deg, #10242c, #0a171d 72%);
+}
+button { font: inherit; -webkit-tap-highlight-color: transparent; }
+
+#app {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: clamp(28px, 6vw, 76px) 18px;
+}
+
+.game-page { width: min(1120px, 100%); }
+.hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 32px;
+  margin: 0 5px 25px;
+}
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 9px;
+  color: #f58a6f;
+  font: 700 0.68rem/1 "Space Mono", monospace;
+  letter-spacing: 0.19em;
+}
+.eyebrow span { width: 22px; height: 2px; background: currentColor; }
+.hero h1 {
+  margin: 0;
+  color: #fff0c9;
+  font-size: clamp(2.5rem, 6.8vw, 5.5rem);
+  line-height: 0.86;
+  letter-spacing: -0.072em;
+}
+.hero-copy { margin: 15px 0 0; color: #91a9a9; font-size: clamp(0.92rem, 2vw, 1.06rem); }
+.hero-note {
+  display: grid;
+  gap: 7px;
+  min-width: 175px;
+  color: #6c8889;
+  font: 700 0.6rem/1.25 "Space Mono", monospace;
+  letter-spacing: 0.12em;
+  text-align: right;
+}
+.hero-note span:first-child { color: #61bbaa; }
+
+.game-card {
+  overflow: hidden;
+  border: 1px solid rgba(246, 139, 111, 0.58);
+  border-radius: 26px;
+  background: #152a32;
+  box-shadow: 0 34px 90px rgba(0, 0, 0, 0.43), inset 0 0 0 1px rgba(255, 238, 198, 0.035);
+}
+.game-stage {
+  position: relative;
+  overflow: hidden;
+  margin: 8px;
+  aspect-ratio: 16 / 9;
+  border-radius: 18px;
+  background: #142b39;
+  isolation: isolate;
+}
+#game-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  outline: none;
+  touch-action: manipulation;
+}
+#game-canvas:focus-visible { box-shadow: inset 0 0 0 4px #ffe7b5; }
+
+.hud {
+  position: absolute;
+  z-index: 2;
+  top: clamp(14px, 3.2vw, 28px);
+  left: clamp(14px, 3.2vw, 30px);
+  right: clamp(14px, 3.2vw, 30px);
+  display: flex;
+  align-items: flex-start;
+  gap: clamp(12px, 3vw, 31px);
+  pointer-events: none;
+  font-family: "Space Mono", monospace;
+}
+.hud-item { display: grid; gap: 3px; }
+.hud-item span { color: rgba(255, 231, 181, 0.58); font-size: clamp(0.46rem, 1.1vw, 0.65rem); letter-spacing: 0.13em; }
+.hud-item strong { color: #fff0c9; font-size: clamp(0.95rem, 2.4vw, 1.5rem); letter-spacing: 0.08em; }
+.hud-best strong { color: #ff9272; }
+.speed-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  padding: 8px 10px;
+  border: 1px solid rgba(94, 188, 170, 0.38);
+  border-radius: 99px;
+  color: #89cfc2;
+  background: rgba(11, 30, 36, 0.58);
+  font-size: clamp(0.48rem, 1.1vw, 0.65rem);
+  letter-spacing: 0.08em;
+  backdrop-filter: blur(6px);
+}
+.speed-chip i { width: 6px; height: 6px; border-radius: 50%; background: #61bbaa; box-shadow: 0 0 10px #61bbaa; }
+
+.game-overlay {
+  position: absolute;
+  z-index: 4;
+  top: 50%;
+  left: 50%;
+  width: min(430px, calc(100% - 28px));
+  padding: clamp(22px, 4vw, 34px);
+  border: 1px solid rgba(255, 231, 181, 0.28);
+  border-radius: 18px;
+  color: #fff0c9;
+  background: rgba(13, 29, 35, 0.91);
+  box-shadow: 12px 12px 0 rgba(16, 40, 46, 0.62), 0 24px 60px rgba(5, 14, 18, 0.28);
+  text-align: center;
+  transform: translate(-50%, -46%) scale(0.97);
+  opacity: 0;
+  pointer-events: none;
+  backdrop-filter: blur(12px);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+.game-overlay.is-visible { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+.game-overlay > p:first-child {
+  margin: 0 0 8px;
+  color: #65bfad;
+  font: 700 clamp(0.55rem, 1.3vw, 0.68rem)/1 "Space Mono", monospace;
+  letter-spacing: 0.18em;
+}
+.game-overlay h2 { margin: 0; font-size: clamp(1.55rem, 4vw, 2.25rem); letter-spacing: -0.04em; }
+.game-overlay > p:nth-of-type(2) { margin: 10px auto 20px; max-width: 330px; color: #9fb2ae; font-size: clamp(0.78rem, 1.8vw, 0.92rem); line-height: 1.6; }
+.game-overlay button {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  padding: 12px 13px 12px 20px;
+  border: 0;
+  border-radius: 8px;
+  color: #132a31;
+  background: #f68a6e;
+  box-shadow: 0 4px 0 #a74e4a;
+  font-weight: 800;
+  cursor: pointer;
+}
+.game-overlay button:hover { background: #ff9d7e; transform: translateY(-1px); }
+.game-overlay button:active { transform: translateY(3px); box-shadow: 0 1px 0 #a74e4a; }
+.game-overlay button:focus-visible { outline: 3px solid #ffe7b5; outline-offset: 4px; }
+.game-overlay button b { padding: 4px 6px; border-radius: 4px; color: #ffe7b5; background: #b4524d; font: 700 0.55rem/1 "Space Mono", monospace; letter-spacing: 0.07em; }
+
+.mobile-controls {
+  position: absolute;
+  z-index: 3;
+  right: clamp(12px, 2.7vw, 26px);
+  bottom: clamp(12px, 2.7vw, 25px);
+  display: flex;
+  gap: 9px;
+}
+.mobile-controls button {
+  width: clamp(54px, 8.5vw, 76px);
+  height: clamp(48px, 7.5vw, 67px);
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 2px;
+  border: 1px solid rgba(255, 231, 181, 0.38);
+  border-radius: 10px;
+  color: #f9e8bd;
+  background: rgba(13, 29, 35, 0.68);
+  cursor: pointer;
+  backdrop-filter: blur(5px);
+  touch-action: none;
+}
+.mobile-controls button:last-child { border-color: rgba(246, 138, 110, 0.75); color: #ff9877; }
+.mobile-controls b { font: 700 clamp(1rem, 2.2vw, 1.35rem)/1 "Space Mono", monospace; }
+.mobile-controls span { font: 700 clamp(0.42rem, 0.9vw, 0.55rem)/1 "Space Mono", monospace; letter-spacing: 0.1em; }
+.mobile-controls button:focus-visible { outline: 2px solid #ffe7b5; outline-offset: 2px; }
+
+.game-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  padding: 11px 18px 18px;
+  color: #728f90;
+  font: 700 0.62rem/1.3 "Space Mono", monospace;
+  letter-spacing: 0.08em;
+}
+.game-footer p { margin: 0; }
+.game-footer > div { display: flex; gap: 22px; }
+.live-dot { display: inline-block; width: 7px; height: 7px; margin-right: 7px; border-radius: 50%; background: #61bbaa; box-shadow: 0 0 10px #61bbaa; }
+kbd { display: inline-grid; min-width: 25px; place-items: center; margin-right: 3px; padding: 3px 5px; border: 1px solid #3b5559; border-radius: 4px; color: #b5c5bc; background: #10232b; font: inherit; }
+.tip-row { display: flex; justify-content: space-between; gap: 20px; padding: 16px 7px 0; color: #637e80; font: 600 0.72rem/1.4 "Space Mono", monospace; }
+.tip-row p { margin: 0; }
+.tip-row strong { margin-right: 7px; color: #f0846b; }
+
+@media (hover: hover) and (pointer: fine) {
+  .mobile-controls { opacity: 0.72; }
+  .mobile-controls:hover { opacity: 1; }
+}
+
+@media (max-width: 700px) {
+  #app { padding-inline: 9px; }
+  .hero { align-items: flex-start; margin-bottom: 18px; }
+  .hero-note { display: none; }
+  .game-card { border-radius: 17px; }
+  .game-stage { margin: 4px; border-radius: 12px; }
+  .game-footer { justify-content: center; padding-bottom: 12px; }
+  .game-footer > p { display: none; }
+  .game-footer > div { gap: 12px; }
+  .tip-row { justify-content: center; text-align: center; }
+  .tip-row p:last-child { display: none; }
+}
+
+@media (max-width: 470px) {
+  .hero-copy { margin-top: 10px; }
+  .hud { gap: 10px; }
+  .hud-item span { letter-spacing: 0.05em; }
+  .speed-chip { display: none; }
+  .game-overlay { padding: 17px 18px; }
+  .game-overlay > p:nth-of-type(2) { margin: 6px auto 12px; line-height: 1.35; }
+  .game-overlay button { padding-block: 9px; }
+  .mobile-controls { bottom: 8px; right: 8px; gap: 5px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
+}
