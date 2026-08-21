@@ -1,4 +1,4 @@
-# Dino Afterglow
+# 공룡 러너
 
 크롬 오프라인 공룡 게임에서 영감을 받아 독자적으로 만든 모던 픽셀 러너입니다. 별도 실험 기능 없이 표준 **Canvas 2D API**로 동작하므로 최신 Chrome, Edge, Firefox, Safari에서 바로 플레이할 수 있습니다.
 

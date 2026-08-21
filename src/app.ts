@@ -39,20 +39,7 @@ function requireElement<T extends Element>(selector: string): T {
 }
 
 document.querySelector<HTMLElement>("#app")!.innerHTML = `
-  <section class="game-page" aria-labelledby="game-title">
-    <header class="hero">
-      <div>
-        <p class="eyebrow"><span></span> DESERT RUN // 01</p>
-        <h1 id="game-title">Dino Afterglow</h1>
-        <p class="hero-copy">노을이 사라지기 전에, 사막의 끝까지 달려보세요.</p>
-      </div>
-      <div class="hero-note" aria-label="게임 특징">
-        <span>CANVAS 2D</span>
-        <span>NO INSTALL</span>
-        <span>KEYBOARD + TOUCH</span>
-      </div>
-    </header>
-
+  <section class="game-page" aria-label="공룡 러너 게임">
     <article class="game-card">
       <div class="game-stage" id="game-stage">
         <canvas id="game-canvas" width="960" height="540" tabindex="0" aria-label="공룡 러너 게임 화면">
@@ -72,7 +59,6 @@ document.querySelector<HTMLElement>("#app")!.innerHTML = `
         </div>
 
         <div class="game-overlay is-visible" id="game-overlay" role="dialog" aria-modal="false" aria-labelledby="overlay-title">
-          <p id="overlay-kicker">READY AT DUSK</p>
           <h2 id="overlay-title">달릴 준비됐나요?</h2>
           <p id="overlay-copy">선인장은 뛰어넘고, 익룡 아래에서는 몸을 낮추세요.</p>
           <button id="start-button" type="button"><span>게임 시작</span><b>SPACE</b></button>
@@ -83,20 +69,7 @@ document.querySelector<HTMLElement>("#app")!.innerHTML = `
           <button id="jump-button" type="button" aria-label="점프"><b>↑</b><span>JUMP</span></button>
         </div>
       </div>
-
-      <footer class="game-footer">
-        <p><span class="live-dot"></span> RUNNER ONLINE</p>
-        <div>
-          <span><kbd>SPACE</kbd><kbd>↑</kbd> JUMP</span>
-          <span><kbd>↓</kbd> DUCK</span>
-        </div>
-      </footer>
     </article>
-
-    <aside class="tip-row">
-      <p><strong>TIP</strong> 점수가 오를수록 속도가 빨라집니다.</p>
-      <p>최고 기록은 이 브라우저에 자동 저장됩니다.</p>
-    </aside>
   </section>
 `;
 
@@ -109,7 +82,6 @@ const scoreElement = requireElement<HTMLElement>("#score");
 const bestElement = requireElement<HTMLElement>("#best-score");
 const speedElement = requireElement<HTMLElement>("#speed");
 const overlay = requireElement<HTMLElement>("#game-overlay");
-const overlayKicker = requireElement<HTMLElement>("#overlay-kicker");
 const overlayTitle = requireElement<HTMLElement>("#overlay-title");
 const overlayCopy = requireElement<HTMLElement>("#overlay-copy");
 const startButton = requireElement<HTMLButtonElement>("#start-button");
@@ -133,17 +105,14 @@ function updateInterface(): void {
   overlay.classList.toggle("is-visible", state.phase !== "running");
 
   if (state.phase === "ready") {
-    overlayKicker.textContent = "READY AT DUSK";
     overlayTitle.textContent = "달릴 준비됐나요?";
     overlayCopy.textContent = "선인장은 뛰어넘고, 익룡 아래에서는 몸을 낮추세요.";
     startButton.innerHTML = "<span>게임 시작</span><b>SPACE</b>";
   } else if (state.phase === "paused") {
-    overlayKicker.textContent = "RUN PAUSED";
     overlayTitle.textContent = "잠시 쉬어갈까요?";
     overlayCopy.textContent = "준비되면 같은 자리에서 다시 출발합니다.";
     startButton.innerHTML = "<span>계속 달리기</span><b>SPACE</b>";
   } else if (state.phase === "gameOver") {
-    overlayKicker.textContent = isNewBest ? "NEW PERSONAL BEST" : "RUN COMPLETE";
     overlayTitle.textContent = `${formatScore(state.score)}점`;
     overlayCopy.textContent = isNewBest
       ? "오늘의 석양에 새로운 기록을 남겼어요."
