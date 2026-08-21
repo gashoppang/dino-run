@@ -40,9 +40,8 @@ function requireElement<T extends Element>(selector: string): T {
 
 document.querySelector<HTMLElement>("#app")!.innerHTML = `
   <section class="game-page" aria-label="공룡 러너 게임">
-    <article class="game-card">
-      <div class="game-stage" id="game-stage">
-        <canvas id="game-canvas" width="960" height="540" tabindex="0" aria-label="공룡 러너 게임 화면">
+    <div class="game-stage" id="game-stage">
+      <canvas id="game-canvas" width="960" height="540" tabindex="0" aria-label="공룡 러너 게임 화면">
           브라우저가 Canvas를 지원해야 게임을 플레이할 수 있습니다.
         </canvas>
 
@@ -68,8 +67,7 @@ document.querySelector<HTMLElement>("#app")!.innerHTML = `
           <button id="duck-button" type="button" aria-label="숙이기"><b>↓</b><span>DUCK</span></button>
           <button id="jump-button" type="button" aria-label="점프"><b>↑</b><span>JUMP</span></button>
         </div>
-      </div>
-    </article>
+    </div>
   </section>
 `;
 

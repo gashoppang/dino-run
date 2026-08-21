@@ -22,24 +22,15 @@ button { font: inherit; -webkit-tap-highlight-color: transparent; }
   min-height: 100vh;
   display: grid;
   place-items: center;
-  padding: clamp(8px, 2vw, 22px);
+  padding: 0;
 }
 
 .game-page { width: min(1120px, 100%); }
 
-.game-card {
-  overflow: hidden;
-  border: 1px solid rgba(246, 139, 111, 0.58);
-  border-radius: 26px;
-  background: #152a32;
-  box-shadow: 0 34px 90px rgba(0, 0, 0, 0.43), inset 0 0 0 1px rgba(255, 238, 198, 0.035);
-}
 .game-stage {
   position: relative;
   overflow: hidden;
-  margin: 8px;
   aspect-ratio: 16 / 9;
-  border-radius: 18px;
   background: #142b39;
   isolation: isolate;
 }
@@ -155,12 +146,6 @@ button { font: inherit; -webkit-tap-highlight-color: transparent; }
 @media (hover: hover) and (pointer: fine) {
   .mobile-controls { opacity: 0.72; }
   .mobile-controls:hover { opacity: 1; }
-}
-
-@media (max-width: 700px) {
-  #app { padding-inline: 9px; }
-  .game-card { border-radius: 17px; }
-  .game-stage { margin: 4px; border-radius: 12px; }
 }
 
 @media (max-width: 470px) {
