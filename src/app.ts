@@ -101,23 +101,23 @@ function renderHome(): void {
     <section class="home-view">
       <div class="home-copy">
         <p class="eyebrow">2 PLAYER RUNNER</p>
-        <h1>같이 달릴<br>준비됐나요?</h1>
-        <p>한 화면에서 나란히 기록에 도전하는 2인용 공룡 러너입니다.</p>
+        <h1>공룡<br>러너</h1>
+        <p>두 명이 한 화면에서 함께 달립니다.</p>
       </div>
       <nav class="route-grid" aria-label="메인 메뉴">
         <a class="route-card route-card-primary" href="/game" data-route>
           <span class="route-number">01</span>
-          <span><b>게임 시작</b><small>1P · 2P 분할 플레이</small></span>
+          <span><b>시작</b><small>2인 플레이</small></span>
           <i aria-hidden="true">→</i>
         </a>
         <a class="route-card" href="/leaderboard" data-route>
           <span class="route-number">02</span>
-          <span><b>리더보드</b><small>로컬 최고 기록</small></span>
+          <span><b>리더보드</b><small>최고 기록</small></span>
           <i aria-hidden="true">→</i>
         </a>
         <a class="route-card" href="/settings" data-route>
           <span class="route-number">03</span>
-          <span><b>설정</b><small>게임 환경 설정</small></span>
+          <span><b>설정</b><small>환경 설정</small></span>
           <i aria-hidden="true">→</i>
         </a>
       </nav>
@@ -143,13 +143,13 @@ function playerMarkup(player: PlayerId): string {
       </div>
       <div class="game-overlay" data-overlay>
         <h2 data-overlay-title>00000점</h2>
-        <p data-overlay-copy>닉네임을 입력해 점수를 저장하세요.</p>
+        <p data-overlay-copy>닉네임을 입력하세요.</p>
         <form class="nickname-form" data-nickname-form novalidate>
           <label>
             <span class="sr-only">${playerLabel} 닉네임</span>
             <input data-nickname type="text" maxlength="12" autocomplete="off" placeholder="닉네임" aria-describedby="${player}-nickname-error">
           </label>
-          <button data-record type="submit"><span>기록 저장</span><b>↵</b></button>
+          <button data-record type="submit"><span>저장</span><b>↵</b></button>
           <small id="${player}-nickname-error" data-nickname-error aria-live="polite"></small>
         </form>
       </div>
@@ -205,11 +205,11 @@ function updatePlayerInterface(player: PlayerController): void {
     player.overlayTitle.textContent = `${formatScore(state.score)}점`;
     if (player.scoreRecorded) {
       player.overlayCopy.textContent = player.isNewBest
-        ? "새로운 개인 최고 기록입니다."
+        ? "신기록"
         : `개인 최고 ${formatScore(state.bestScore)}점`;
     } else {
-      player.overlayCopy.textContent = "닉네임을 입력해 점수를 저장하세요.";
-      player.recordButton.innerHTML = "<span>기록 저장</span><b>↵</b>";
+      player.overlayCopy.textContent = "닉네임을 입력하세요.";
+      player.recordButton.innerHTML = "<span>저장</span><b>↵</b>";
     }
   }
 }
@@ -228,7 +228,7 @@ function mountGame(): () => void {
         ${playerMarkup("2p")}
       </div>
       <section class="shared-control is-visible" data-shared-control aria-live="polite">
-        <h2 data-shared-title>함께 달릴 준비</h2>
+        <h2 data-shared-title>준비</h2>
         <button data-shared-button type="button"><span>시작</span><b>SPACE</b></button>
         <p data-shared-copy>1P W / S · 2P ↑ / ↓</p>
       </section>
@@ -251,14 +251,16 @@ function mountGame(): () => void {
     );
     sharedControl.classList.toggle("is-visible", hasPausedPlayer || isReady || canReplay);
     if (hasPausedPlayer) {
-      sharedTitle.textContent = "잠시 멈췄습니다";
-      sharedCopy.textContent = "두 화면의 라운드를 이어서 진행합니다.";
+      sharedTitle.textContent = "일시정지";
+      sharedCopy.hidden = true;
     } else if (canReplay) {
-      sharedTitle.textContent = "다음 라운드 준비";
-      sharedCopy.textContent = "두 기록이 모두 저장되었습니다.";
+      sharedTitle.textContent = "준비";
+      sharedCopy.textContent = "1P W · S / 2P ↑ · ↓";
+      sharedCopy.hidden = false;
     } else {
-      sharedTitle.textContent = "함께 달릴 준비";
-      sharedCopy.textContent = "1P W / S · 2P ↑ / ↓";
+      sharedTitle.textContent = "준비";
+      sharedCopy.textContent = "1P W · S / 2P ↑ · ↓";
+      sharedCopy.hidden = false;
     }
   };
 
@@ -359,7 +361,7 @@ function mountGame(): () => void {
       event.preventDefault();
       const nickname = normalizeNickname(player.nicknameInput.value);
       if (!nickname) {
-        player.nicknameError.textContent = "닉네임을 입력해주세요.";
+        player.nicknameError.textContent = "닉네임을 입력하세요.";
         player.nicknameInput.setAttribute("aria-invalid", "true");
         player.nicknameInput.focus({ preventScroll: true });
         return;
@@ -422,10 +424,9 @@ function renderLeaderboard(): () => void {
       <header class="subpage-header">
         <p class="eyebrow">LOCAL RECORDS</p>
         <h1>리더보드</h1>
-        <p>이 기기에서 달성한 최고 기록입니다.</p>
+        <p>닉네임별 최고 기록</p>
       </header>
       <ol class="leaderboard-list" data-leaderboard-list aria-live="polite"></ol>
-      <p class="mock-note">기록이 저장되면 새로고침 없이 닉네임별 최고 점수 10개가 갱신됩니다.</p>
     </main>
   `;
 
@@ -439,7 +440,7 @@ function renderLeaderboard(): () => void {
         <strong>${formatScore(entry.score)}</strong>
       </li>
     `).join("") : `
-      <li class="score-row is-placeholder"><span class="rank">--</span><span class="score-name"><b>아직 기록이 없습니다</b><small>게임을 시작해보세요</small></span><strong>-----</strong></li>
+      <li class="score-row is-placeholder"><span class="rank">--</span><span class="score-name"><b>기록 없음</b></span><strong>-----</strong></li>
     `;
   };
   const handleStorage = (event: StorageEvent): void => {
@@ -463,14 +464,12 @@ function renderSettings(): void {
       <header class="subpage-header">
         <p class="eyebrow">PREFERENCES</p>
         <h1>설정</h1>
-        <p>플레이 환경을 조정하는 화면입니다.</p>
       </header>
       <section class="settings-list" aria-label="게임 설정 목업">
-        <label class="setting-row"><span><b>화면 흔들림</b><small>충돌 시 화면 효과</small></span><input type="checkbox" checked></label>
-        <label class="setting-row"><span><b>속도 표시</b><small>게임 중 현재 속도 표시</small></span><input type="checkbox" checked></label>
-        <label class="setting-row"><span><b>고대비 모드</b><small>장애물 가시성 강화</small></span><input type="checkbox"></label>
+        <label class="setting-row"><span><b>화면 흔들림</b><small>충돌 효과</small></span><input type="checkbox" checked></label>
+        <label class="setting-row"><span><b>속도 표시</b><small>현재 속도</small></span><input type="checkbox" checked></label>
+        <label class="setting-row"><span><b>고대비 모드</b><small>장애물 강조</small></span><input type="checkbox"></label>
       </section>
-      <p class="mock-note">설정 저장과 세부 옵션은 다음 단계에서 연결됩니다.</p>
     </main>
   `;
 }
