@@ -100,7 +100,6 @@ function renderHome(): void {
   app.innerHTML = `
     <section class="home-view">
       <div class="home-copy">
-        <p class="eyebrow">2 PLAYER RUNNER</p>
         <h1>공룡<br>러너</h1>
       </div>
       <nav class="route-grid" aria-label="메인 메뉴">
@@ -111,12 +110,12 @@ function renderHome(): void {
         </a>
         <a class="route-card" href="/leaderboard" data-route>
           <span class="route-number">02</span>
-          <span><b>리더보드</b><small>최고 기록</small></span>
+          <span><b>리더보드</b></span>
           <i aria-hidden="true">→</i>
         </a>
         <a class="route-card" href="/settings" data-route>
           <span class="route-number">03</span>
-          <span><b>설정</b><small>환경 설정</small></span>
+          <span><b>설정</b></span>
           <i aria-hidden="true">→</i>
         </a>
       </nav>
