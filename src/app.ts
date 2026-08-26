@@ -14,6 +14,8 @@ import {
 } from "./game/engine";
 import { createCanvasRenderer } from "./game/canvasRenderer";
 import {
+  LEADERBOARD_KEY,
+  LEADERBOARD_UPDATED_EVENT,
   getBestScoreForNickname,
   getNicknameLeaderboard,
   normalizeNickname,
@@ -378,9 +380,8 @@ function mountGame(): () => void {
   };
 }
 
-function renderLeaderboard(): void {
+function renderLeaderboard(): () => void {
   document.title = "리더보드 · 공룡 게임";
-  const scores = getNicknameLeaderboard(readLeaderboard()).slice(0, 10);
   app.innerHTML = `
     <main class="subpage-view">
       ${homeLink()}
@@ -389,20 +390,35 @@ function renderLeaderboard(): void {
         <h1>리더보드</h1>
         <p>이 기기에서 달성한 최고 기록입니다.</p>
       </header>
-      <ol class="leaderboard-list">
-        ${scores.length > 0 ? scores.map((entry, index) => `
-          <li class="score-row">
-            <span class="rank">${String(index + 1).padStart(2, "0")}</span>
-            <span class="score-name"><b>${escapeHtml(entry.nickname)}</b></span>
-            <strong>${formatScore(entry.score)}</strong>
-          </li>
-        `).join("") : `
-          <li class="score-row is-placeholder"><span class="rank">--</span><span class="score-name"><b>아직 기록이 없습니다</b><small>게임을 시작해보세요</small></span><strong>-----</strong></li>
-        `}
-      </ol>
-      <p class="mock-note">플레이 슬롯과 관계없이 닉네임별 최고 기록 10개가 표시됩니다.</p>
+      <ol class="leaderboard-list" data-leaderboard-list aria-live="polite"></ol>
+      <p class="mock-note">기록이 저장되면 새로고침 없이 닉네임별 최고 점수 10개가 갱신됩니다.</p>
     </main>
   `;
+
+  const list = requireElement<HTMLOListElement>("[data-leaderboard-list]", app);
+  const updateList = (): void => {
+    const scores = getNicknameLeaderboard(readLeaderboard()).slice(0, 10);
+    list.innerHTML = scores.length > 0 ? scores.map((entry, index) => `
+      <li class="score-row">
+        <span class="rank">${String(index + 1).padStart(2, "0")}</span>
+        <span class="score-name"><b>${escapeHtml(entry.nickname)}</b></span>
+        <strong>${formatScore(entry.score)}</strong>
+      </li>
+    `).join("") : `
+      <li class="score-row is-placeholder"><span class="rank">--</span><span class="score-name"><b>아직 기록이 없습니다</b><small>게임을 시작해보세요</small></span><strong>-----</strong></li>
+    `;
+  };
+  const handleStorage = (event: StorageEvent): void => {
+    if (event.key === LEADERBOARD_KEY || event.key === null) updateList();
+  };
+
+  updateList();
+  window.addEventListener("storage", handleStorage);
+  window.addEventListener(LEADERBOARD_UPDATED_EVENT, updateList);
+  return () => {
+    window.removeEventListener("storage", handleStorage);
+    window.removeEventListener(LEADERBOARD_UPDATED_EVENT, updateList);
+  };
 }
 
 function renderSettings(): void {
@@ -430,7 +446,7 @@ function renderRoute(): void {
   cleanupRoute = undefined;
   const route = getRoute();
   if (route === "/game") cleanupRoute = mountGame();
-  else if (route === "/leaderboard") renderLeaderboard();
+  else if (route === "/leaderboard") cleanupRoute = renderLeaderboard();
   else if (route === "/settings") renderSettings();
   else renderHome();
   window.scrollTo(0, 0);

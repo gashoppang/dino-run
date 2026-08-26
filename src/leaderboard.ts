@@ -14,6 +14,7 @@ interface ScoreStorage {
 }
 
 export const LEADERBOARD_KEY = "dino-run:leaderboard:v1";
+export const LEADERBOARD_UPDATED_EVENT = "dino-run:leaderboard-updated";
 const MAX_ENTRIES = 100;
 const MAX_NICKNAME_LENGTH = 12;
 
@@ -117,6 +118,9 @@ export function recordLeaderboardScore(
     .slice(0, MAX_ENTRIES);
   try {
     storage.setItem(LEADERBOARD_KEY, JSON.stringify(entries));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent(LEADERBOARD_UPDATED_EVENT));
+    }
   } catch {
     // Storage can be unavailable in private or locked-down browser contexts.
   }
