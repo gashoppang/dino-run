@@ -200,11 +200,11 @@ function updatePlayerInterface(player: PlayerController): void {
   player.nicknameForm.hidden = player.scoreRecorded;
 
   if (state.phase === "gameOver") {
-    player.overlayTitle.textContent = `${formatScore(state.score)}점`;
+    player.overlayTitle.textContent = `${state.score}점`;
     if (player.scoreRecorded) {
       player.overlayCopy.textContent = player.isNewBest
         ? "신기록입니다"
-        : `${player.nickname}의 최고기록 ${formatScore(state.bestScore)}점`;
+        : `${player.nickname}의 최고기록 ${state.bestScore}점`;
     } else {
       player.overlayCopy.textContent = "닉네임을 입력하세요.";
       player.recordButton.innerHTML = "<span>저장</span><b>↵</b>";
