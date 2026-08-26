@@ -391,16 +391,16 @@ function renderLeaderboard(): void {
       </header>
       <ol class="leaderboard-list">
         ${scores.length > 0 ? scores.map((entry, index) => `
-          <li class="score-row score-${entry.player === "1p" ? "coral" : "teal"}">
+          <li class="score-row">
             <span class="rank">${String(index + 1).padStart(2, "0")}</span>
-            <span class="score-name"><b>${escapeHtml(entry.nickname)}</b><small>${entry.player.toUpperCase()}</small></span>
+            <span class="score-name"><b>${escapeHtml(entry.nickname)}</b></span>
             <strong>${formatScore(entry.score)}</strong>
           </li>
         `).join("") : `
           <li class="score-row is-placeholder"><span class="rank">--</span><span class="score-name"><b>아직 기록이 없습니다</b><small>게임을 시작해보세요</small></span><strong>-----</strong></li>
         `}
       </ol>
-      <p class="mock-note">이 기기에서 완료한 게임 기록이 점수순으로 최대 10개 표시됩니다.</p>
+      <p class="mock-note">플레이 슬롯과 관계없이 닉네임별 최고 기록 10개가 표시됩니다.</p>
     </main>
   `;
 }

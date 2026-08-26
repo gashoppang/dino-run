@@ -289,7 +289,6 @@ a { color: inherit; }
 .score-name { display: grid; gap: 5px; }
 .score-name small { color: #78908d; font: 700 .62rem/1 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .1em; }
 .score-row strong { color: #ef8a6d; font: 700 clamp(1.35rem, 3vw, 2.2rem)/1 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .08em; }
-.score-teal strong { color: #72c5b5; }
 .score-row.is-placeholder { opacity: .38; }
 .settings-list { display: grid; }
 .setting-row { grid-template-columns: 1fr auto; gap: 24px; cursor: pointer; }
