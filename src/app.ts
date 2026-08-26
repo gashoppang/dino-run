@@ -102,12 +102,11 @@ function renderHome(): void {
       <div class="home-copy">
         <p class="eyebrow">2 PLAYER RUNNER</p>
         <h1>공룡<br>러너</h1>
-        <p>두 명이 한 화면에서 함께 달립니다.</p>
       </div>
       <nav class="route-grid" aria-label="메인 메뉴">
         <a class="route-card route-card-primary" href="/game" data-route>
           <span class="route-number">01</span>
-          <span><b>시작</b><small>2인 플레이</small></span>
+          <span><b>시작</b></span>
           <i aria-hidden="true">→</i>
         </a>
         <a class="route-card" href="/leaderboard" data-route>
@@ -205,7 +204,7 @@ function updatePlayerInterface(player: PlayerController): void {
     player.overlayTitle.textContent = `${formatScore(state.score)}점`;
     if (player.scoreRecorded) {
       player.overlayCopy.textContent = player.isNewBest
-        ? "신기록"
+        ? "신기록입니다"
         : `개인 최고 ${formatScore(state.bestScore)}점`;
     } else {
       player.overlayCopy.textContent = "닉네임을 입력하세요.";
