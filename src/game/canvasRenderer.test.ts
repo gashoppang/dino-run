@@ -25,17 +25,27 @@ describe("standard canvas obstacle renderer", () => {
   });
 
   it.each([
-    ["cactus", 6],
-    ["bird", 6],
+    ["cactus-small", 6],
+    ["cactus-large", 6],
+    ["cactus-double", 12],
+    ["cactus-triple", 18],
+    ["bird-high", 6],
+    ["bird-low", 6],
   ] as const)("draws a visible %s with multiple painted parts", (kind, minimumParts) => {
     const context = createContextMock();
     const obstacle: ObstacleState = {
       id: 1,
       kind,
       x: 600,
-      y: kind === "bird" ? 344 : 350,
-      width: kind === "bird" ? 78 : 52,
-      height: kind === "bird" ? 42 : 70,
+      y: kind.startsWith("bird-") ? 340 : 350,
+      width: kind.startsWith("bird-")
+        ? 78
+        : kind === "cactus-triple"
+          ? 104
+          : kind === "cactus-double"
+            ? 72
+            : 48,
+      height: kind.startsWith("bird-") ? 42 : kind === "cactus-large" ? 82 : 64,
     };
 
     drawObstacle(context, obstacle, 0.2);

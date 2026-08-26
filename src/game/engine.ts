@@ -3,7 +3,13 @@ export const WORLD_HEIGHT = 540;
 export const GROUND_Y = 420;
 
 export type GamePhase = "ready" | "running" | "paused" | "gameOver";
-export type ObstacleKind = "cactus" | "bird";
+export type ObstacleKind =
+  | "cactus-small"
+  | "cactus-large"
+  | "cactus-double"
+  | "cactus-triple"
+  | "bird-high"
+  | "bird-low";
 
 export interface RunnerState {
   x: number;
@@ -47,6 +53,14 @@ const GRAVITY = 2250;
 const JUMP_VELOCITY = -810;
 const STARTING_SPEED = 340;
 const MAX_SPEED = 720;
+const OBSTACLE_SPECS = {
+  "cactus-small": { width: 34, height: 50, y: GROUND_Y - 50 },
+  "cactus-large": { width: 48, height: 82, y: GROUND_Y - 82 },
+  "cactus-double": { width: 72, height: 62, y: GROUND_Y - 62 },
+  "cactus-triple": { width: 104, height: 64, y: GROUND_Y - 64 },
+  "bird-high": { width: 78, height: 42, y: GROUND_Y - 132 },
+  "bird-low": { width: 78, height: 42, y: GROUND_Y - 80 },
+} satisfies Record<ObstacleKind, { width: number; height: number; y: number }>;
 
 function createRunner(): RunnerState {
   return {
@@ -121,16 +135,22 @@ export function setDucking(state: GameState, ducking: boolean): void {
 }
 
 function spawnObstacle(state: GameState, random: () => number): void {
-  const kind: ObstacleKind =
-    random() > 0.62 && state.score > 75 ? "bird" : "cactus";
-  const isBird = kind === "bird";
-  const width = isBird ? 78 : 44 + Math.round(random() * 18);
-  const height = isBird ? 42 : 62 + Math.round(random() * 20);
+  const cactusKinds: ObstacleKind[] = ["cactus-small", "cactus-large"];
+  if (state.score >= 35) cactusKinds.push("cactus-double");
+  if (state.score >= 70) cactusKinds.push("cactus-triple");
+
+  const spawnBird = state.score > 75 && random() > 0.62;
+  const kind: ObstacleKind = spawnBird
+    ? random() < 0.5
+      ? "bird-high"
+      : "bird-low"
+    : cactusKinds[Math.min(cactusKinds.length - 1, Math.floor(random() * cactusKinds.length))]!;
+  const { width, height, y } = OBSTACLE_SPECS[kind];
   state.obstacles.push({
     id: state.nextObstacleId++,
     kind,
     x: state.viewportWidth + 48,
-    y: isBird ? GROUND_Y - 80 : GROUND_Y - height,
+    y,
     width,
     height,
   });
@@ -142,7 +162,7 @@ function spawnObstacle(state: GameState, random: () => number): void {
 function overlaps(a: RunnerState, b: ObstacleState): boolean {
   const runnerInsetX = a.ducking ? 10 : 13;
   const runnerInsetTop = a.ducking ? 7 : 10;
-  const obstacleInset = b.kind === "bird" ? 9 : 5;
+  const obstacleInset = b.kind.startsWith("bird-") ? 9 : 5;
   return (
     a.x + runnerInsetX < b.x + b.width - obstacleInset &&
     a.x + a.width - runnerInsetX > b.x + obstacleInset &&

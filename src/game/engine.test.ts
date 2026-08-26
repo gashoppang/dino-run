@@ -46,7 +46,7 @@ describe("game engine", () => {
   it("lets a ducking runner pass under a bird", () => {
     const createBird = () => ({
       id: 1,
-      kind: "bird" as const,
+      kind: "bird-low" as const,
       x: 143,
       y: GROUND_Y - 80,
       width: 78,
@@ -66,6 +66,52 @@ describe("game engine", () => {
     expect(duckingState.phase).toBe("running");
   });
 
+  it("lets a standing runner pass under a high bird", () => {
+    const state = createGameState();
+    startGame(state);
+    state.obstacles.push({
+      id: 1,
+      kind: "bird-high",
+      x: 143,
+      y: GROUND_Y - 132,
+      width: 78,
+      height: 42,
+    });
+    tickGame(state, 1 / 60, () => 0.5);
+    expect(state.phase).toBe("running");
+  });
+
+  it.each([
+    ["cactus-small", 0.01, 34, 50],
+    ["cactus-large", 0.26, 48, 82],
+    ["cactus-double", 0.51, 72, 62],
+    ["cactus-triple", 0.76, 104, 64],
+  ] as const)("spawns the %s obstacle", (expectedKind, cactusRoll, width, height) => {
+    const state = createGameState();
+    startGame(state);
+    state.distance = 1200;
+    state.spawnTimer = 0;
+    const rolls = [0.5, cactusRoll, 0.5];
+    tickGame(state, 1 / 60, () => rolls.shift() ?? 0.5);
+    expect(state.obstacles[0]?.kind).toBe(expectedKind);
+    expect(state.obstacles[0]?.width).toBe(width);
+    expect(state.obstacles[0]?.height).toBe(height);
+  });
+
+  it.each([
+    ["bird-high", 0.1, GROUND_Y - 132],
+    ["bird-low", 0.9, GROUND_Y - 80],
+  ] as const)("spawns the %s obstacle at its own altitude", (expectedKind, heightRoll, expectedY) => {
+    const state = createGameState();
+    startGame(state);
+    state.distance = 1200;
+    state.spawnTimer = 0;
+    const rolls = [0.9, heightRoll, 0.5];
+    tickGame(state, 1 / 60, () => rolls.shift() ?? 0.5);
+    expect(state.obstacles[0]?.kind).toBe(expectedKind);
+    expect(state.obstacles[0]?.y).toBe(expectedY);
+  });
+
   it("ends the game and updates the best score on collision", () => {
     const state = createGameState(2);
     startGame(state);
@@ -73,7 +119,7 @@ describe("game engine", () => {
     state.distance = 96;
     state.obstacles.push({
       id: 1,
-      kind: "cactus",
+      kind: "cactus-large",
       x: state.runner.x + 10,
       y: state.runner.y + 10,
       width: 48,

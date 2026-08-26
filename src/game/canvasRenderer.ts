@@ -192,6 +192,25 @@ function drawRunner(context: CanvasRenderingContext2D, state: GameState): void {
   context.restore();
 }
 
+function drawCactusPart(
+  context: CanvasRenderingContext2D,
+  clusterHeight: number,
+  offsetX: number,
+  cactusWidth: number,
+  cactusHeight: number,
+): void {
+  const offsetY = clusterHeight - cactusHeight;
+  const unit = Math.max(3, Math.round(cactusWidth / 10));
+  context.fillStyle = COLORS.teal;
+  context.fillRect(offsetX + cactusWidth * 0.38, offsetY, cactusWidth * 0.3, cactusHeight);
+  context.fillRect(offsetX + cactusWidth * 0.08, offsetY + cactusHeight * 0.38, cactusWidth * 0.36, unit * 2);
+  context.fillRect(offsetX + cactusWidth * 0.08, offsetY + cactusHeight * 0.2, unit * 2, cactusHeight * 0.34);
+  context.fillRect(offsetX + cactusWidth * 0.62, offsetY + cactusHeight * 0.55, cactusWidth * 0.34, unit * 2);
+  context.fillRect(offsetX + cactusWidth * 0.78, offsetY + cactusHeight * 0.36, unit * 2, cactusHeight * 0.31);
+  context.fillStyle = "rgba(255, 231, 181, 0.46)";
+  context.fillRect(offsetX + cactusWidth * 0.46, offsetY + cactusHeight * 0.08, unit, cactusHeight * 0.7);
+}
+
 export function drawObstacle(
   context: CanvasRenderingContext2D,
   obstacle: ObstacleState,
@@ -205,16 +224,17 @@ export function drawObstacle(
   context.shadowOffsetX = 5;
   context.shadowOffsetY = 5;
 
-  if (obstacle.kind === "cactus") {
-    const unit = Math.max(4, Math.round(width / 11));
-    context.fillStyle = COLORS.teal;
-    context.fillRect(width * 0.4, 0, width * 0.28, height);
-    context.fillRect(width * 0.12, height * 0.36, width * 0.34, unit * 2);
-    context.fillRect(width * 0.12, height * 0.18, unit * 2, height * 0.34);
-    context.fillRect(width * 0.62, height * 0.52, width * 0.34, unit * 2);
-    context.fillRect(width * 0.78, height * 0.34, unit * 2, height * 0.32);
-    context.fillStyle = "rgba(255, 231, 181, 0.46)";
-    context.fillRect(width * 0.47, height * 0.08, unit, height * 0.7);
+  if (obstacle.kind.startsWith("cactus-")) {
+    if (obstacle.kind === "cactus-double") {
+      drawCactusPart(context, height, 0, 34, 56);
+      drawCactusPart(context, height, 38, 34, 62);
+    } else if (obstacle.kind === "cactus-triple") {
+      drawCactusPart(context, height, 0, 32, 54);
+      drawCactusPart(context, height, 36, 32, 64);
+      drawCactusPart(context, height, 72, 32, 50);
+    } else {
+      drawCactusPart(context, height, 0, width, height);
+    }
   } else {
     const wingDown = Math.floor(elapsed * 9) % 2 === 1;
     context.fillStyle = COLORS.coralLight;
