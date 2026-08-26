@@ -112,6 +112,25 @@ describe("game engine", () => {
     expect(state.obstacles[0]?.y).toBe(expectedY);
   });
 
+  it("mixes tight, normal, and breather obstacle gaps", () => {
+    const spawnWithCadence = (cadenceRoll: number): number => {
+      const state = createGameState();
+      startGame(state);
+      state.spawnTimer = 0;
+      const rolls = [0, cadenceRoll, 0.5];
+      tickGame(state, 1 / 60, () => rolls.shift() ?? 0.5);
+      return state.spawnTimer;
+    };
+
+    const tightGap = spawnWithCadence(0.1);
+    const normalGap = spawnWithCadence(0.5);
+    const breatherGap = spawnWithCadence(0.9);
+
+    expect(tightGap).toBeCloseTo(0.845);
+    expect(normalGap).toBeCloseTo(1.3);
+    expect(breatherGap).toBeCloseTo(1.995);
+  });
+
   it("ends the game and updates the best score on collision", () => {
     const state = createGameState(2);
     startGame(state);

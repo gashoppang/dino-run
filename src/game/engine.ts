@@ -134,6 +134,18 @@ export function setDucking(state: GameState, ducking: boolean): void {
   state.runner.y = GROUND_Y - state.runner.height;
 }
 
+function getNextSpawnDelay(speed: number, random: () => number): number {
+  const cadenceRoll = random();
+  const varianceRoll = random();
+  const baseDelay = cadenceRoll < 0.2
+    ? 0.72 + varianceRoll * 0.25
+    : cadenceRoll < 0.8
+      ? 1 + varianceRoll * 0.6
+      : 1.72 + varianceRoll * 0.55;
+  const speedFactor = Math.min(0.28, (speed - STARTING_SPEED) / 1500);
+  return Math.max(0.65, baseDelay - speedFactor);
+}
+
 function spawnObstacle(state: GameState, random: () => number): void {
   const cactusKinds: ObstacleKind[] = ["cactus-small", "cactus-large"];
   if (state.score >= 35) cactusKinds.push("cactus-double");
@@ -155,8 +167,7 @@ function spawnObstacle(state: GameState, random: () => number): void {
     height,
   });
 
-  const speedFactor = Math.min(0.28, (state.speed - STARTING_SPEED) / 1500);
-  state.spawnTimer = 1.02 + random() * 0.62 - speedFactor;
+  state.spawnTimer = getNextSpawnDelay(state.speed, random);
 }
 
 function overlaps(a: RunnerState, b: ObstacleState): boolean {
