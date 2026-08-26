@@ -9,7 +9,6 @@ import {
   setViewportWidth,
   startGame,
   tickGame,
-  type GamePhase,
   type GameState,
 } from "./game/engine";
 import { createCanvasRenderer } from "./game/canvasRenderer";
@@ -29,10 +28,9 @@ type Route = "/" | "/game" | "/leaderboard" | "/settings";
 interface PlayerController {
   id: PlayerId;
   state: GameState;
-  previousPhase: GamePhase;
-  previousBest: number;
   isNewBest: boolean;
   nickname: string;
+  scoreRecorded: boolean;
   canvas: HTMLCanvasElement;
   stage: HTMLElement;
   score: HTMLElement;
@@ -44,7 +42,7 @@ interface PlayerController {
   nicknameForm: HTMLFormElement;
   nicknameInput: HTMLInputElement;
   nicknameError: HTMLElement;
-  startButton: HTMLButtonElement;
+  recordButton: HTMLButtonElement;
   jumpButton: HTMLButtonElement;
   duckButton: HTMLButtonElement;
   render: (state: GameState) => void;
@@ -132,7 +130,6 @@ function renderHome(): void {
 function playerMarkup(player: PlayerId): string {
   const isPlayerOne = player === "1p";
   const playerLabel = isPlayerOne ? "1P" : "2P";
-  const jumpKey = isPlayerOne ? "W" : "↑";
   return `
     <section class="player-stage player-${player}" data-player="${player}" aria-label="${playerLabel} 게임 화면">
       <canvas class="game-canvas" tabindex="0" aria-label="${playerLabel} 공룡 러너 캔버스">
@@ -144,15 +141,15 @@ function playerMarkup(player: PlayerId): string {
         <div class="hud-item hud-best"><span>개인 최고</span><strong data-best>00000</strong></div>
         <div class="speed-chip"><i></i><span data-speed>34</span> KM/H</div>
       </div>
-      <div class="game-overlay is-visible" data-overlay>
-        <h2 data-overlay-title>${playerLabel} 준비</h2>
-        <p data-overlay-copy>닉네임을 입력하고 달리기를 시작하세요.</p>
+      <div class="game-overlay" data-overlay>
+        <h2 data-overlay-title>${playerLabel} 기록</h2>
+        <p data-overlay-copy>닉네임을 입력해 점수를 저장하세요.</p>
         <form class="nickname-form" data-nickname-form novalidate>
           <label>
             <span class="sr-only">${playerLabel} 닉네임</span>
             <input data-nickname type="text" maxlength="12" autocomplete="off" placeholder="닉네임" aria-describedby="${player}-nickname-error">
           </label>
-          <button data-start type="submit"><span>달리기</span><b>${jumpKey}</b></button>
+          <button data-record type="submit"><span>기록 저장</span><b>↵</b></button>
           <small id="${player}-nickname-error" data-nickname-error aria-live="polite"></small>
         </form>
       </div>
@@ -174,10 +171,9 @@ function createPlayerController(player: PlayerId): PlayerController {
   return {
     id: player,
     state: createGameState(bestScore),
-    previousPhase: "ready",
-    previousBest: bestScore,
     isNewBest: false,
     nickname: "",
+    scoreRecorded: false,
     canvas,
     stage,
     score: requireElement("[data-score]", stage),
@@ -189,7 +185,7 @@ function createPlayerController(player: PlayerId): PlayerController {
     nicknameForm: requireElement("[data-nickname-form]", stage),
     nicknameInput: requireElement("[data-nickname]", stage),
     nicknameError: requireElement("[data-nickname-error]", stage),
-    startButton: requireElement("[data-start]", stage),
+    recordButton: requireElement("[data-record]", stage),
     jumpButton: requireElement("[data-jump]", stage),
     duckButton: requireElement("[data-duck]", stage),
     render: createCanvasRenderer(canvas, context),
@@ -199,59 +195,29 @@ function createPlayerController(player: PlayerId): PlayerController {
 function updatePlayerInterface(player: PlayerController): void {
   const { state } = player;
   const playerLabel = player.id === "1p" ? "1P" : "2P";
-  const jumpKey = player.id === "1p" ? "W" : "↑";
   player.score.textContent = formatScore(state.score);
-  player.best.textContent = formatScore(state.bestScore);
+  player.best.textContent = player.scoreRecorded ? formatScore(state.bestScore) : "-----";
   player.speed.textContent = String(Math.round(state.speed / 10));
   player.stage.dataset.phase = state.phase;
-  player.overlay.classList.toggle("is-visible", state.phase !== "running");
-  const isPaused = state.phase === "paused";
-  player.nicknameForm.classList.toggle("is-resume", isPaused);
-  player.nicknameInput.disabled = isPaused;
+  player.overlay.classList.toggle("is-visible", state.phase === "gameOver");
+  player.nicknameForm.hidden = player.scoreRecorded;
 
-  if (state.phase === "ready") {
-    player.overlayTitle.textContent = `${playerLabel} 준비`;
-    player.overlayCopy.textContent = "닉네임을 입력하고 달리기를 시작하세요.";
-    player.startButton.innerHTML = `<span>달리기</span><b>${jumpKey}</b>`;
-  } else if (state.phase === "paused") {
-    player.overlayTitle.textContent = `${playerLabel} 일시정지`;
-    player.overlayCopy.textContent = "같은 위치에서 다시 이어집니다.";
-    player.startButton.innerHTML = `<span>계속하기</span><b>${jumpKey}</b>`;
-  } else if (state.phase === "gameOver") {
-    player.overlayTitle.textContent = `${formatScore(state.score)}점`;
-    player.overlayCopy.textContent = player.isNewBest
-      ? `${player.nickname}님의 새로운 최고 기록입니다.`
-      : `${player.nickname}님 · 최고 기록 ${formatScore(state.bestScore)}점`;
-    player.startButton.innerHTML = `<span>다시 달리기</span><b>${jumpKey}</b>`;
-  }
-}
-
-function beginOrResume(player: PlayerController): void {
-  if (player.state.phase === "paused") {
-    resumeGame(player.state);
-  } else {
-    const nickname = normalizeNickname(player.nicknameInput.value);
-    if (!nickname) {
-      player.nicknameError.textContent = "닉네임을 입력해주세요.";
-      player.nicknameInput.setAttribute("aria-invalid", "true");
-      player.nicknameInput.focus({ preventScroll: true });
-      return;
+  if (state.phase === "gameOver") {
+    if (player.scoreRecorded) {
+      player.overlayTitle.textContent = `${player.nickname} · ${formatScore(state.score)}점`;
+      player.overlayCopy.textContent = player.isNewBest
+        ? "새로운 개인 최고 기록입니다."
+        : `개인 최고 ${formatScore(state.bestScore)}점`;
+    } else {
+      player.overlayTitle.textContent = `${playerLabel} · ${formatScore(state.score)}점`;
+      player.overlayCopy.textContent = "닉네임을 입력해 점수를 저장하세요.";
+      player.recordButton.innerHTML = "<span>기록 저장</span><b>↵</b>";
     }
-    player.nickname = nickname;
-    player.state.bestScore = getBestScoreForNickname(readLeaderboard(), nickname);
-    player.nicknameInput.value = "";
-    player.nicknameError.textContent = "";
-    player.nicknameInput.removeAttribute("aria-invalid");
-    startGame(player.state);
-    player.isNewBest = false;
   }
-  updatePlayerInterface(player);
-  player.canvas.focus({ preventScroll: true });
 }
 
 function requestJump(player: PlayerController): void {
   if (player.state.phase === "running") jump(player.state);
-  else beginOrResume(player);
 }
 
 function mountGame(): () => void {
@@ -263,12 +229,69 @@ function mountGame(): () => void {
         ${playerMarkup("1p")}
         ${playerMarkup("2p")}
       </div>
+      <section class="shared-control is-visible" data-shared-control aria-live="polite">
+        <h2 data-shared-title>함께 달릴 준비</h2>
+        <button data-shared-button type="button"><span>동시 시작</span><b>SPACE</b></button>
+        <p data-shared-copy>1P W / S · 2P ↑ / ↓</p>
+      </section>
     </main>
   `;
 
   const players = [createPlayerController("1p"), createPlayerController("2p")];
+  const sharedControl = requireElement<HTMLElement>("[data-shared-control]", app);
+  const sharedTitle = requireElement<HTMLElement>("[data-shared-title]", sharedControl);
+  const sharedButton = requireElement<HTMLButtonElement>("[data-shared-button]", sharedControl);
+  const sharedCopy = requireElement<HTMLElement>("[data-shared-copy]", sharedControl);
   let previousTime = performance.now();
   let animationFrame = 0;
+
+  const updateSharedControl = (): void => {
+    const hasPausedPlayer = players.some((player) => player.state.phase === "paused");
+    const isReady = players.every((player) => player.state.phase === "ready");
+    const canReplay = players.every(
+      (player) => player.state.phase === "gameOver" && player.scoreRecorded,
+    );
+    sharedControl.classList.toggle("is-visible", hasPausedPlayer || isReady || canReplay);
+    if (hasPausedPlayer) {
+      sharedTitle.textContent = "잠시 멈췄습니다";
+      sharedButton.innerHTML = "<span>함께 계속하기</span><b>SPACE</b>";
+      sharedCopy.textContent = "두 화면의 라운드를 이어서 진행합니다.";
+    } else if (canReplay) {
+      sharedTitle.textContent = "다음 라운드 준비";
+      sharedButton.innerHTML = "<span>동시 재시작</span><b>SPACE</b>";
+      sharedCopy.textContent = "두 기록이 모두 저장되었습니다.";
+    } else {
+      sharedTitle.textContent = "함께 달릴 준비";
+      sharedButton.innerHTML = "<span>동시 시작</span><b>SPACE</b>";
+      sharedCopy.textContent = "1P W / S · 2P ↑ / ↓";
+    }
+  };
+
+  const startOrResumeRound = (): void => {
+    const hasPausedPlayer = players.some((player) => player.state.phase === "paused");
+    if (hasPausedPlayer) {
+      players.forEach((player) => resumeGame(player.state));
+    } else {
+      const canStart = players.every((player) => player.state.phase === "ready");
+      const canReplay = players.every(
+        (player) => player.state.phase === "gameOver" && player.scoreRecorded,
+      );
+      if (!canStart && !canReplay) return;
+      for (const player of players) {
+        player.state.bestScore = 0;
+        player.nickname = "";
+        player.scoreRecorded = false;
+        player.isNewBest = false;
+        player.nicknameInput.value = "";
+        player.nicknameError.textContent = "";
+        player.nicknameInput.removeAttribute("aria-invalid");
+        startGame(player.state);
+        updatePlayerInterface(player);
+      }
+    }
+    previousTime = performance.now();
+    updateSharedControl();
+  };
 
   const resizeObservers = players.map((player) => {
     const observer = new ResizeObserver(([entry]) => {
@@ -294,26 +317,22 @@ function mountGame(): () => void {
     const deltaSeconds = (now - previousTime) / 1000;
     previousTime = now;
     for (const player of players) {
-      player.previousPhase = player.state.phase;
-      player.previousBest = player.state.bestScore;
       tickGame(player.state, deltaSeconds);
-      if (player.previousPhase === "running" && player.state.phase === "gameOver") {
-        player.isNewBest = player.state.bestScore > player.previousBest;
-        recordLeaderboardScore({
-          nickname: player.nickname,
-          player: player.id,
-          score: player.state.score,
-        });
-      }
       updatePlayerInterface(player);
       player.render(player.state);
     }
+    updateSharedControl();
     animationFrame = requestAnimationFrame(gameLoop);
   };
 
   const handleKeyDown = (event: KeyboardEvent): void => {
     if (event.target instanceof HTMLInputElement) return;
     if (event.target instanceof HTMLButtonElement && event.code === "Space") return;
+    if (event.code === "Space") {
+      event.preventDefault();
+      if (!event.repeat) startOrResumeRound();
+      return;
+    }
     const player = event.code === "KeyW" || event.code === "KeyS"
       ? players[0]
       : event.code === "ArrowUp" || event.code === "ArrowDown"
@@ -337,12 +356,30 @@ function mountGame(): () => void {
     if (document.hidden) players.forEach((player) => pauseGame(player.state));
     previousTime = performance.now();
     players.forEach(updatePlayerInterface);
+    updateSharedControl();
   };
 
   for (const player of players) {
     player.nicknameForm.addEventListener("submit", (event) => {
       event.preventDefault();
-      beginOrResume(player);
+      const nickname = normalizeNickname(player.nicknameInput.value);
+      if (!nickname) {
+        player.nicknameError.textContent = "닉네임을 입력해주세요.";
+        player.nicknameInput.setAttribute("aria-invalid", "true");
+        player.nicknameInput.focus({ preventScroll: true });
+        return;
+      }
+      const previousBest = getBestScoreForNickname(readLeaderboard(), nickname);
+      player.nickname = nickname;
+      player.state.bestScore = Math.max(previousBest, player.state.score);
+      player.isNewBest = player.state.score > previousBest;
+      player.scoreRecorded = true;
+      recordLeaderboardScore({ nickname, player: player.id, score: player.state.score });
+      player.nicknameInput.value = "";
+      player.nicknameError.textContent = "";
+      player.nicknameInput.removeAttribute("aria-invalid");
+      updatePlayerInterface(player);
+      updateSharedControl();
     });
     player.nicknameInput.addEventListener("input", () => {
       if (normalizeNickname(player.nicknameInput.value)) {
@@ -366,10 +403,12 @@ function mountGame(): () => void {
     player.render(player.state);
   }
 
+  sharedButton.addEventListener("click", startOrResumeRound);
   window.addEventListener("keydown", handleKeyDown, { passive: false });
   window.addEventListener("keyup", handleKeyUp);
   document.addEventListener("visibilitychange", handleVisibility);
   animationFrame = requestAnimationFrame(gameLoop);
+  updateSharedControl();
 
   return () => {
     cancelAnimationFrame(animationFrame);
