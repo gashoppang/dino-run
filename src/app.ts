@@ -505,7 +505,7 @@ function renderLeaderboard(): () => void {
     podium.innerHTML = topScores.map((entry, index) => `
       <li class="podium-card" data-rank="${index + 1}">
         <span class="podium-rank">${index + 1}등</span>
-        <span class="podium-name"><b>${escapeHtml(entry.name)}</b><small>${entry.studentId ? `학번 ${escapeHtml(entry.studentId)}` : "이전 기록"}</small></span>
+        <span class="podium-name"><b>${escapeHtml(entry.name)}</b><small>${entry.studentId ? escapeHtml(entry.studentId) : "이전 기록"}</small></span>
         <strong>${formatScore(entry.score)}</strong>
       </li>
     `).join("");
@@ -513,7 +513,7 @@ function renderLeaderboard(): () => void {
     list.innerHTML = remainingScores.length > 0 ? remainingScores.map((entry, index) => `
       <li class="score-row">
         <span class="rank">${String(index + 4).padStart(2, "0")}</span>
-        <span class="score-name"><b>${escapeHtml(entry.name)}</b><small>${entry.studentId ? `학번 ${escapeHtml(entry.studentId)}` : "이전 기록"}</small></span>
+        <span class="score-name"><b>${escapeHtml(entry.name)}</b><small>${entry.studentId ? escapeHtml(entry.studentId) : "이전 기록"}</small></span>
         <strong>${formatScore(entry.score)}</strong>
       </li>
     `).join("") : scores.length === 0 ? `

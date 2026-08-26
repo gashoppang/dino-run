@@ -331,12 +331,8 @@ a { color: inherit; }
 .podium-name { min-width: 0; display: grid; gap: 6px; }
 .podium-name b { overflow-wrap: anywhere; font-size: clamp(.9rem, 2vw, 1.35rem); }
 .podium-name small {
-  justify-self: center;
-  padding: 5px 8px;
-  border: 1px solid rgba(114, 197, 181, .34);
-  color: #b8e0d8;
-  background: rgba(42, 105, 99, .24);
-  font: 800 clamp(.58rem, 1.15vw, .72rem)/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+  color: #94aaa6;
+  font: 700 clamp(.56rem, 1vw, .66rem)/1 ui-monospace, SFMono-Regular, Consolas, monospace;
   letter-spacing: .06em;
 }
 .podium-card strong { color: #ef8a6d; font: 800 clamp(1.2rem, 3.4vw, 2.5rem)/1 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .06em; }
@@ -355,13 +351,9 @@ a { color: inherit; }
 .score-row b { font-size: 1.1rem; }
 .score-name { display: grid; gap: 5px; }
 .score-name small {
-  justify-self: start;
-  padding: 5px 8px;
-  border: 1px solid rgba(114, 197, 181, .3);
-  color: #b8e0d8;
-  background: rgba(42, 105, 99, .2);
-  font: 800 .7rem/1 ui-monospace, SFMono-Regular, Consolas, monospace;
-  letter-spacing: .06em;
+  color: #8fa5a1;
+  font: 700 .64rem/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: .07em;
 }
 .score-row strong { color: #ef8a6d; font: 700 clamp(1.35rem, 3vw, 2.2rem)/1 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .08em; }
 .score-row.is-placeholder { opacity: .38; }
