@@ -142,7 +142,7 @@ function playerMarkup(player: PlayerId): string {
         <div class="speed-chip"><i></i><span data-speed>34</span> KM/H</div>
       </div>
       <div class="game-overlay" data-overlay>
-        <h2 data-overlay-title>${playerLabel} 기록</h2>
+        <h2 data-overlay-title>00000점</h2>
         <p data-overlay-copy>닉네임을 입력해 점수를 저장하세요.</p>
         <form class="nickname-form" data-nickname-form novalidate>
           <label>
@@ -194,7 +194,6 @@ function createPlayerController(player: PlayerId): PlayerController {
 
 function updatePlayerInterface(player: PlayerController): void {
   const { state } = player;
-  const playerLabel = player.id === "1p" ? "1P" : "2P";
   player.score.textContent = formatScore(state.score);
   player.best.textContent = player.scoreRecorded ? formatScore(state.bestScore) : "-----";
   player.speed.textContent = String(Math.round(state.speed / 10));
@@ -203,13 +202,12 @@ function updatePlayerInterface(player: PlayerController): void {
   player.nicknameForm.hidden = player.scoreRecorded;
 
   if (state.phase === "gameOver") {
+    player.overlayTitle.textContent = `${formatScore(state.score)}점`;
     if (player.scoreRecorded) {
-      player.overlayTitle.textContent = `${player.nickname} · ${formatScore(state.score)}점`;
       player.overlayCopy.textContent = player.isNewBest
         ? "새로운 개인 최고 기록입니다."
         : `개인 최고 ${formatScore(state.bestScore)}점`;
     } else {
-      player.overlayTitle.textContent = `${playerLabel} · ${formatScore(state.score)}점`;
       player.overlayCopy.textContent = "닉네임을 입력해 점수를 저장하세요.";
       player.recordButton.innerHTML = "<span>기록 저장</span><b>↵</b>";
     }
