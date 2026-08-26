@@ -2,7 +2,8 @@ export type PlayerId = "1p" | "2p";
 
 export interface LeaderboardEntry {
   id: string;
-  nickname: string;
+  studentId: string;
+  name: string;
   player: PlayerId;
   score: number;
   createdAt: number;
@@ -16,27 +17,51 @@ interface ScoreStorage {
 export const LEADERBOARD_KEY = "dino-run:leaderboard:v1";
 export const LEADERBOARD_UPDATED_EVENT = "dino-run:leaderboard-updated";
 const MAX_ENTRIES = 100;
-const MAX_NICKNAME_LENGTH = 12;
+const MAX_STUDENT_ID_LENGTH = 16;
+const MAX_NAME_LENGTH = 12;
 
-export function normalizeNickname(value: string): string {
-  return Array.from(value.trim().replace(/\s+/g, " "))
-    .slice(0, MAX_NICKNAME_LENGTH)
+export function normalizeStudentId(value: string): string {
+  return Array.from(value.trim().replace(/\s+/g, ""))
+    .slice(0, MAX_STUDENT_ID_LENGTH)
     .join("");
 }
 
-function isEntry(value: unknown): value is LeaderboardEntry {
-  if (!value || typeof value !== "object") return false;
-  const entry = value as Partial<LeaderboardEntry>;
-  return (
-    typeof entry.id === "string" &&
-    typeof entry.nickname === "string" &&
-    normalizeNickname(entry.nickname).length > 0 &&
-    (entry.player === "1p" || entry.player === "2p") &&
-    typeof entry.score === "number" &&
-    Number.isFinite(entry.score) &&
-    typeof entry.createdAt === "number" &&
-    Number.isFinite(entry.createdAt)
-  );
+export function normalizeName(value: string): string {
+  return Array.from(value.trim().replace(/\s+/g, " "))
+    .slice(0, MAX_NAME_LENGTH)
+    .join("");
+}
+
+function normalizeEntry(value: unknown): LeaderboardEntry | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const entry = value as Partial<LeaderboardEntry> & { nickname?: unknown };
+  if (
+    typeof entry.id !== "string" ||
+    (entry.player !== "1p" && entry.player !== "2p") ||
+    typeof entry.score !== "number" ||
+    !Number.isFinite(entry.score) ||
+    typeof entry.createdAt !== "number" ||
+    !Number.isFinite(entry.createdAt)
+  ) return undefined;
+
+  const studentId = typeof entry.studentId === "string"
+    ? normalizeStudentId(entry.studentId)
+    : "";
+  const name = typeof entry.name === "string"
+    ? normalizeName(entry.name)
+    : typeof entry.nickname === "string"
+      ? normalizeName(entry.nickname)
+      : "";
+  if (!name) return undefined;
+
+  return {
+    id: entry.id,
+    studentId,
+    name,
+    player: entry.player,
+    score: Math.max(0, Math.floor(entry.score)),
+    createdAt: entry.createdAt,
+  };
 }
 
 export function parseLeaderboard(raw: string | null): LeaderboardEntry[] {
@@ -45,12 +70,8 @@ export function parseLeaderboard(raw: string | null): LeaderboardEntry[] {
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
     return parsed
-      .filter(isEntry)
-      .map((entry) => ({
-        ...entry,
-        nickname: normalizeNickname(entry.nickname),
-        score: Math.max(0, Math.floor(entry.score)),
-      }))
+      .map(normalizeEntry)
+      .filter((entry): entry is LeaderboardEntry => Boolean(entry))
       .sort((a, b) => b.score - a.score || a.createdAt - b.createdAt)
       .slice(0, MAX_ENTRIES);
   } catch {
@@ -66,34 +87,36 @@ export function readLeaderboard(storage: ScoreStorage = localStorage): Leaderboa
   }
 }
 
-function nicknameKey(nickname: string): string {
-  return normalizeNickname(nickname).toLocaleLowerCase("ko-KR");
+function studentKey(studentId: string, name = ""): string {
+  const normalizedStudentId = normalizeStudentId(studentId).toLocaleLowerCase("ko-KR");
+  const normalizedName = normalizeName(name).toLocaleLowerCase("ko-KR");
+  return normalizedStudentId || (normalizedName ? `legacy:${normalizedName}` : "");
 }
 
-export function getBestScoreForNickname(
+export function getBestScoreForStudent(
   entries: LeaderboardEntry[],
-  nickname: string,
+  studentId: string,
 ): number {
-  const key = nicknameKey(nickname);
+  const key = studentKey(studentId);
   if (!key) return 0;
   return entries.reduce(
-    (best, entry) => nicknameKey(entry.nickname) === key
+    (best, entry) => studentKey(entry.studentId, entry.name) === key
       ? Math.max(best, entry.score)
       : best,
     0,
   );
 }
 
-export function getNicknameLeaderboard(
+export function getStudentLeaderboard(
   entries: LeaderboardEntry[],
 ): LeaderboardEntry[] {
-  const bestByNickname = new Map<string, LeaderboardEntry>();
+  const bestByStudent = new Map<string, LeaderboardEntry>();
   for (const entry of entries) {
-    const key = nicknameKey(entry.nickname);
-    const current = bestByNickname.get(key);
-    if (!current || entry.score > current.score) bestByNickname.set(key, entry);
+    const key = studentKey(entry.studentId, entry.name);
+    const current = bestByStudent.get(key);
+    if (!current || entry.score > current.score) bestByStudent.set(key, entry);
   }
-  return [...bestByNickname.values()].sort(
+  return [...bestByStudent.values()].sort(
     (a, b) => b.score - a.score || a.createdAt - b.createdAt,
   );
 }
@@ -103,12 +126,14 @@ export function recordLeaderboardScore(
   storage: ScoreStorage = localStorage,
   now = Date.now(),
 ): LeaderboardEntry[] {
-  const nickname = normalizeNickname(entry.nickname);
-  if (!nickname) return readLeaderboard(storage);
+  const studentId = normalizeStudentId(entry.studentId);
+  const name = normalizeName(entry.name);
+  if (!studentId || !name) return readLeaderboard(storage);
 
   const nextEntry: LeaderboardEntry = {
     id: `${now}-${entry.player}-${Math.random().toString(36).slice(2, 9)}`,
-    nickname,
+    studentId,
+    name,
     player: entry.player,
     score: Math.max(0, Math.floor(entry.score)),
     createdAt: now,

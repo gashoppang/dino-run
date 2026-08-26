@@ -191,52 +191,7 @@ a { color: inherit; }
 }
 .game-overlay.is-visible { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
 .game-overlay h2 { margin: 0; font-size: clamp(1.15rem, 2.5vw, 1.7rem); letter-spacing: -.035em; }
-.game-overlay p { margin: 5px 0 12px; color: #9fb2ae; font-size: .72rem; }
-.nickname-form {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 7px;
-  align-items: start;
-}
-.nickname-form label { min-width: 0; }
-.nickname-form input {
-  width: 100%;
-  height: 36px;
-  padding: 0 11px;
-  border: 1px solid rgba(255, 231, 181, .3);
-  border-radius: 0;
-  outline: 0;
-  color: #fff0c9;
-  background: rgba(5, 18, 23, .72);
-  font-size: .78rem;
-}
-.nickname-form input::placeholder { color: #6e8683; }
-.nickname-form input:focus { border-color: #ffe7b5; box-shadow: 0 0 0 2px rgba(255, 231, 181, .16); }
-.nickname-form input[aria-invalid="true"] { border-color: #ff846d; }
-.nickname-form small {
-  grid-column: 1 / -1;
-  min-height: 1em;
-  color: #ff9272;
-  font-size: .62rem;
-  text-align: left;
-}
-.game-overlay button {
-  display: inline-flex;
-  align-items: center;
-  gap: 13px;
-  padding: 8px 9px 8px 14px;
-  border: 0;
-  color: #132a31;
-  background: #f68a6e;
-  box-shadow: 0 3px 0 #a74e4a;
-  font-weight: 800;
-  cursor: pointer;
-}
-.player-2p .game-overlay button { background: #72c5b5; box-shadow: 0 3px 0 #32776e; }
-.game-overlay button:hover { filter: brightness(1.08); transform: translateY(-1px); }
-.game-overlay button:active { transform: translateY(2px); box-shadow: none; }
-.game-overlay button:focus-visible { outline: 3px solid #ffe7b5; outline-offset: 3px; }
-.game-overlay button b { padding: 4px 6px; color: #ffe7b5; background: rgba(19, 42, 49, .7); font: 700 .55rem/1 ui-monospace, SFMono-Regular, Consolas, monospace; }
+.game-overlay p { margin: 5px 0 0; color: #9fb2ae; font-size: .72rem; }
 .mobile-controls {
   position: absolute;
   z-index: 4;
@@ -270,7 +225,7 @@ a { color: inherit; }
   z-index: 16;
   top: 50%;
   left: 50%;
-  width: min(330px, calc(100% - 32px));
+  width: min(540px, calc(100% - 32px));
   padding: 14px 18px;
   border: 1px solid rgba(255, 231, 181, .42);
   color: #fff0c9;
@@ -285,6 +240,36 @@ a { color: inherit; }
 .shared-control.is-visible { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
 .shared-control h2 { margin: 0 0 8px; font-size: 1.08rem; letter-spacing: -.03em; }
 .shared-control p { margin: 8px 0 0; color: #849c99; font: 700 .58rem/1.3 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .06em; }
+.identity-form { display: grid; justify-items: center; }
+.identity-fields { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.identity-fields fieldset {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin: 0;
+  padding: 9px;
+  border: 1px solid rgba(255, 231, 181, .18);
+}
+.identity-fields legend { padding: 0 5px; color: #ef8a6d; font: 800 .62rem/1 ui-monospace, SFMono-Regular, Consolas, monospace; }
+.identity-fields fieldset:last-child legend { color: #72c5b5; }
+.identity-fields label { min-width: 0; display: grid; gap: 4px; text-align: left; }
+.identity-fields label span { color: #8fa4a0; font-size: .58rem; font-weight: 700; }
+.identity-fields input {
+  min-width: 0;
+  width: 100%;
+  height: 34px;
+  padding: 0 9px;
+  border: 1px solid rgba(255, 231, 181, .3);
+  border-radius: 0;
+  outline: 0;
+  color: #fff0c9;
+  background: rgba(5, 18, 23, .72);
+  font-size: .76rem;
+}
+.identity-fields input:focus { border-color: #ffe7b5; box-shadow: 0 0 0 2px rgba(255, 231, 181, .16); }
+.identity-fields input[aria-invalid="true"] { border-color: #ff846d; }
+.identity-form > small { min-height: 1em; margin: 0 0 7px; color: #ff9272; font-size: .62rem; }
 .shared-control button {
   display: inline-flex;
   align-items: center;
@@ -367,7 +352,8 @@ a { color: inherit; }
   .hud { top: 10px; right: 9px; gap: 9px; }
   .speed-chip { display: none; }
   .game-overlay { width: min(310px, calc(100% - 110px)); padding: 12px 14px; }
-  .game-overlay p { margin: 3px 0 8px; }
+  .game-overlay p { margin-top: 3px; }
+  .identity-fields { grid-template-columns: 1fr; gap: 7px; }
   .mobile-controls { right: 7px; bottom: 7px; gap: 4px; }
   .mobile-controls button { width: 48px; height: 42px; }
   .subpage-view { padding-inline: 22px; }

@@ -15,9 +15,10 @@ import { createCanvasRenderer } from "./game/canvasRenderer";
 import {
   LEADERBOARD_KEY,
   LEADERBOARD_UPDATED_EVENT,
-  getBestScoreForNickname,
-  getNicknameLeaderboard,
-  normalizeNickname,
+  getBestScoreForStudent,
+  getStudentLeaderboard,
+  normalizeName,
+  normalizeStudentId,
   readLeaderboard,
   recordLeaderboardScore,
   type PlayerId,
@@ -29,7 +30,8 @@ interface PlayerController {
   id: PlayerId;
   state: GameState;
   isNewBest: boolean;
-  nickname: string;
+  studentId: string;
+  name: string;
   scoreRecorded: boolean;
   canvas: HTMLCanvasElement;
   stage: HTMLElement;
@@ -38,10 +40,8 @@ interface PlayerController {
   overlay: HTMLElement;
   overlayTitle: HTMLElement;
   overlayCopy: HTMLElement;
-  nicknameForm: HTMLFormElement;
-  nicknameInput: HTMLInputElement;
-  nicknameError: HTMLElement;
-  recordButton: HTMLButtonElement;
+  studentIdInput: HTMLInputElement;
+  nameInput: HTMLInputElement;
   jumpButton: HTMLButtonElement;
   duckButton: HTMLButtonElement;
   render: (state: GameState) => void;
@@ -139,15 +139,7 @@ function playerMarkup(player: PlayerId): string {
       </div>
       <div class="game-overlay" data-overlay>
         <h2 data-overlay-title>00000점</h2>
-        <p data-overlay-copy>닉네임을 입력하세요.</p>
-        <form class="nickname-form" data-nickname-form novalidate>
-          <label>
-            <span class="sr-only">${playerLabel} 닉네임</span>
-            <input data-nickname type="text" maxlength="12" autocomplete="off" placeholder="닉네임" aria-describedby="${player}-nickname-error">
-          </label>
-          <button data-record type="submit"><span>저장</span><b>↵</b></button>
-          <small id="${player}-nickname-error" data-nickname-error aria-live="polite"></small>
-        </form>
+        <p data-overlay-copy></p>
       </div>
       <div class="mobile-controls" aria-label="${playerLabel} 터치 조작">
         <button data-duck type="button" aria-label="${playerLabel} 숙이기"><b>↓</b><span>숙이기</span></button>
@@ -168,7 +160,8 @@ function createPlayerController(player: PlayerId): PlayerController {
     id: player,
     state: createGameState(bestScore),
     isNewBest: false,
-    nickname: "",
+    studentId: "",
+    name: "",
     scoreRecorded: false,
     canvas,
     stage,
@@ -177,10 +170,8 @@ function createPlayerController(player: PlayerId): PlayerController {
     overlay: requireElement("[data-overlay]", stage),
     overlayTitle: requireElement("[data-overlay-title]", stage),
     overlayCopy: requireElement("[data-overlay-copy]", stage),
-    nicknameForm: requireElement("[data-nickname-form]", stage),
-    nicknameInput: requireElement("[data-nickname]", stage),
-    nicknameError: requireElement("[data-nickname-error]", stage),
-    recordButton: requireElement("[data-record]", stage),
+    studentIdInput: requireElement(`[data-student-id="${player}"]`, app),
+    nameInput: requireElement(`[data-name="${player}"]`, app),
     jumpButton: requireElement("[data-jump]", stage),
     duckButton: requireElement("[data-duck]", stage),
     render: createCanvasRenderer(canvas, context),
@@ -193,18 +184,12 @@ function updatePlayerInterface(player: PlayerController): void {
   player.speed.textContent = String(Math.round(state.speed / 10));
   player.stage.dataset.phase = state.phase;
   player.overlay.classList.toggle("is-visible", state.phase === "gameOver");
-  player.nicknameForm.hidden = player.scoreRecorded;
 
   if (state.phase === "gameOver") {
     player.overlayTitle.textContent = `${state.score}점`;
-    if (player.scoreRecorded) {
-      player.overlayCopy.textContent = player.isNewBest
-        ? "신기록입니다"
-        : `${player.nickname}의 최고기록 ${state.bestScore}점`;
-    } else {
-      player.overlayCopy.textContent = "닉네임을 입력하세요.";
-      player.recordButton.innerHTML = "<span>저장</span><b>↵</b>";
-    }
+    player.overlayCopy.textContent = player.isNewBest
+      ? "신기록입니다"
+      : `${player.studentId} ${player.name}의 최고기록 ${state.bestScore}점`;
   }
 }
 
@@ -222,9 +207,24 @@ function mountGame(): () => void {
         ${playerMarkup("2p")}
       </div>
       <section class="shared-control is-visible" data-shared-control aria-live="polite">
-        <h2 data-shared-title>준비</h2>
-        <button data-shared-button type="button"><span>시작</span><b>SPACE</b></button>
-        <p data-shared-copy>1P W / S · 2P ↑ / ↓</p>
+        <h2 data-shared-title>플레이어 정보</h2>
+        <form class="identity-form" data-identity-form novalidate>
+          <div class="identity-fields" data-identity-fields>
+            <fieldset>
+              <legend>1P</legend>
+              <label><span>학번</span><input data-student-id="1p" type="text" maxlength="16" inputmode="numeric" autocomplete="off" aria-describedby="identity-error"></label>
+              <label><span>이름</span><input data-name="1p" type="text" maxlength="12" autocomplete="name" aria-describedby="identity-error"></label>
+            </fieldset>
+            <fieldset>
+              <legend>2P</legend>
+              <label><span>학번</span><input data-student-id="2p" type="text" maxlength="16" inputmode="numeric" autocomplete="off" aria-describedby="identity-error"></label>
+              <label><span>이름</span><input data-name="2p" type="text" maxlength="12" autocomplete="name" aria-describedby="identity-error"></label>
+            </fieldset>
+          </div>
+          <small id="identity-error" data-identity-error aria-live="polite"></small>
+          <button data-shared-button type="submit"><span>시작</span><b>SPACE</b></button>
+          <p data-shared-copy>1P W / S · 2P ↑ / ↓</p>
+        </form>
       </section>
     </main>
   `;
@@ -232,10 +232,49 @@ function mountGame(): () => void {
   const players = [createPlayerController("1p"), createPlayerController("2p")];
   const sharedControl = requireElement<HTMLElement>("[data-shared-control]", app);
   const sharedTitle = requireElement<HTMLElement>("[data-shared-title]", sharedControl);
+  const identityForm = requireElement<HTMLFormElement>("[data-identity-form]", sharedControl);
+  const identityFields = requireElement<HTMLElement>("[data-identity-fields]", identityForm);
+  const identityError = requireElement<HTMLElement>("[data-identity-error]", identityForm);
   const sharedButton = requireElement<HTMLButtonElement>("[data-shared-button]", sharedControl);
+  const sharedButtonLabel = requireElement<HTMLElement>("span", sharedButton);
   const sharedCopy = requireElement<HTMLElement>("[data-shared-copy]", sharedControl);
   let previousTime = performance.now();
   let animationFrame = 0;
+
+  const clearIdentityForm = (): void => {
+    for (const player of players) {
+      player.studentIdInput.value = "";
+      player.nameInput.value = "";
+      player.studentIdInput.removeAttribute("aria-invalid");
+      player.nameInput.removeAttribute("aria-invalid");
+    }
+    identityError.textContent = "";
+  };
+
+  const readIdentityForm = (): boolean => {
+    const identities = players.map((player) => ({
+      player,
+      studentId: normalizeStudentId(player.studentIdInput.value),
+      name: normalizeName(player.nameInput.value),
+    }));
+    const invalid = identities.find(({ studentId, name }) => !studentId || !name);
+    for (const identity of identities) {
+      identity.player.studentIdInput.toggleAttribute("aria-invalid", !identity.studentId);
+      identity.player.nameInput.toggleAttribute("aria-invalid", !identity.name);
+    }
+    if (invalid) {
+      identityError.textContent = `${invalid.player.id === "1p" ? "1P" : "2P"}의 학번과 이름을 입력하세요.`;
+      (!invalid.studentId ? invalid.player.studentIdInput : invalid.player.nameInput)
+        .focus({ preventScroll: true });
+      return false;
+    }
+    for (const { player, studentId, name } of identities) {
+      player.studentId = studentId;
+      player.name = name;
+    }
+    identityError.textContent = "";
+    return true;
+  };
 
   const updateSharedControl = (): void => {
     const hasPausedPlayer = players.some((player) => player.state.phase === "paused");
@@ -244,17 +283,16 @@ function mountGame(): () => void {
       (player) => player.state.phase === "gameOver" && player.scoreRecorded,
     );
     sharedControl.classList.toggle("is-visible", hasPausedPlayer || isReady || canReplay);
+    identityFields.hidden = hasPausedPlayer;
     if (hasPausedPlayer) {
-      sharedTitle.hidden = false;
       sharedTitle.textContent = "일시정지";
+      sharedButtonLabel.textContent = "계속";
+      identityError.hidden = true;
       sharedCopy.hidden = true;
-    } else if (canReplay) {
-      sharedTitle.hidden = true;
-      sharedCopy.textContent = "1P W · S / 2P ↑ · ↓";
-      sharedCopy.hidden = false;
     } else {
-      sharedTitle.hidden = false;
-      sharedTitle.textContent = "준비";
+      sharedTitle.textContent = "플레이어 정보";
+      sharedButtonLabel.textContent = "시작";
+      identityError.hidden = false;
       sharedCopy.textContent = "1P W · S / 2P ↑ · ↓";
       sharedCopy.hidden = false;
     }
@@ -270,20 +308,36 @@ function mountGame(): () => void {
         (player) => player.state.phase === "gameOver" && player.scoreRecorded,
       );
       if (!canStart && !canReplay) return;
+      if (!readIdentityForm()) return;
+      const leaderboard = readLeaderboard();
       for (const player of players) {
-        player.state.bestScore = 0;
-        player.nickname = "";
+        player.state.bestScore = getBestScoreForStudent(leaderboard, player.studentId);
         player.scoreRecorded = false;
         player.isNewBest = false;
-        player.nicknameInput.value = "";
-        player.nicknameError.textContent = "";
-        player.nicknameInput.removeAttribute("aria-invalid");
         startGame(player.state);
         updatePlayerInterface(player);
       }
+      if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     }
     previousTime = performance.now();
     updateSharedControl();
+  };
+
+  const recordFinishedScore = (player: PlayerController): void => {
+    if (player.state.phase !== "gameOver" || player.scoreRecorded) return;
+    const previousBest = getBestScoreForStudent(readLeaderboard(), player.studentId);
+    player.state.bestScore = Math.max(previousBest, player.state.score);
+    player.isNewBest = player.state.score > previousBest;
+    player.scoreRecorded = true;
+    recordLeaderboardScore({
+      studentId: player.studentId,
+      name: player.name,
+      player: player.id,
+      score: player.state.score,
+    });
+    if (players.every(({ state, scoreRecorded }) => state.phase === "gameOver" && scoreRecorded)) {
+      clearIdentityForm();
+    }
   };
 
   const resizeObservers = players.map((player) => {
@@ -311,6 +365,7 @@ function mountGame(): () => void {
     previousTime = now;
     for (const player of players) {
       tickGame(player.state, deltaSeconds);
+      recordFinishedScore(player);
       updatePlayerInterface(player);
       player.render(player.state);
     }
@@ -353,31 +408,16 @@ function mountGame(): () => void {
   };
 
   for (const player of players) {
-    player.nicknameForm.addEventListener("submit", (event) => {
-      event.preventDefault();
-      const nickname = normalizeNickname(player.nicknameInput.value);
-      if (!nickname) {
-        player.nicknameError.textContent = "닉네임을 입력하세요.";
-        player.nicknameInput.setAttribute("aria-invalid", "true");
-        player.nicknameInput.focus({ preventScroll: true });
-        return;
+    player.studentIdInput.addEventListener("input", () => {
+      if (normalizeStudentId(player.studentIdInput.value)) {
+        player.studentIdInput.removeAttribute("aria-invalid");
+        identityError.textContent = "";
       }
-      const previousBest = getBestScoreForNickname(readLeaderboard(), nickname);
-      player.nickname = nickname;
-      player.state.bestScore = Math.max(previousBest, player.state.score);
-      player.isNewBest = player.state.score > previousBest;
-      player.scoreRecorded = true;
-      recordLeaderboardScore({ nickname, player: player.id, score: player.state.score });
-      player.nicknameInput.value = "";
-      player.nicknameError.textContent = "";
-      player.nicknameInput.removeAttribute("aria-invalid");
-      updatePlayerInterface(player);
-      updateSharedControl();
     });
-    player.nicknameInput.addEventListener("input", () => {
-      if (normalizeNickname(player.nicknameInput.value)) {
-        player.nicknameError.textContent = "";
-        player.nicknameInput.removeAttribute("aria-invalid");
+    player.nameInput.addEventListener("input", () => {
+      if (normalizeName(player.nameInput.value)) {
+        player.nameInput.removeAttribute("aria-invalid");
+        identityError.textContent = "";
       }
     });
     player.jumpButton.addEventListener("pointerdown", (event) => {
@@ -396,7 +436,10 @@ function mountGame(): () => void {
     player.render(player.state);
   }
 
-  sharedButton.addEventListener("click", startOrResumeRound);
+  identityForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    startOrResumeRound();
+  });
   window.addEventListener("keydown", handleKeyDown, { passive: false });
   window.addEventListener("keyup", handleKeyUp);
   document.addEventListener("visibilitychange", handleVisibility);
@@ -420,7 +463,7 @@ function renderLeaderboard(): () => void {
       <header class="subpage-header">
         <p class="eyebrow">LOCAL RECORDS</p>
         <h1>리더보드</h1>
-        <p>닉네임별 최고 기록</p>
+        <p>학번별 최고 기록</p>
       </header>
       <ol class="leaderboard-list" data-leaderboard-list aria-live="polite"></ol>
     </main>
@@ -428,11 +471,11 @@ function renderLeaderboard(): () => void {
 
   const list = requireElement<HTMLOListElement>("[data-leaderboard-list]", app);
   const updateList = (): void => {
-    const scores = getNicknameLeaderboard(readLeaderboard()).slice(0, 10);
+    const scores = getStudentLeaderboard(readLeaderboard()).slice(0, 10);
     list.innerHTML = scores.length > 0 ? scores.map((entry, index) => `
       <li class="score-row">
         <span class="rank">${String(index + 1).padStart(2, "0")}</span>
-        <span class="score-name"><b>${escapeHtml(entry.nickname)}</b></span>
+        <span class="score-name"><b>${escapeHtml(entry.name)}</b><small>${escapeHtml(entry.studentId || "이전 기록")}</small></span>
         <strong>${formatScore(entry.score)}</strong>
       </li>
     `).join("") : `
