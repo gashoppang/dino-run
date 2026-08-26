@@ -229,7 +229,7 @@ function mountGame(): () => void {
       </div>
       <section class="shared-control is-visible" data-shared-control aria-live="polite">
         <h2 data-shared-title>함께 달릴 준비</h2>
-        <button data-shared-button type="button"><span>동시 시작</span><b>SPACE</b></button>
+        <button data-shared-button type="button"><span>시작</span><b>SPACE</b></button>
         <p data-shared-copy>1P W / S · 2P ↑ / ↓</p>
       </section>
     </main>
@@ -252,15 +252,12 @@ function mountGame(): () => void {
     sharedControl.classList.toggle("is-visible", hasPausedPlayer || isReady || canReplay);
     if (hasPausedPlayer) {
       sharedTitle.textContent = "잠시 멈췄습니다";
-      sharedButton.innerHTML = "<span>함께 계속하기</span><b>SPACE</b>";
       sharedCopy.textContent = "두 화면의 라운드를 이어서 진행합니다.";
     } else if (canReplay) {
       sharedTitle.textContent = "다음 라운드 준비";
-      sharedButton.innerHTML = "<span>동시 재시작</span><b>SPACE</b>";
       sharedCopy.textContent = "두 기록이 모두 저장되었습니다.";
     } else {
       sharedTitle.textContent = "함께 달릴 준비";
-      sharedButton.innerHTML = "<span>동시 시작</span><b>SPACE</b>";
       sharedCopy.textContent = "1P W / S · 2P ↑ / ↓";
     }
   };
