@@ -65,6 +65,38 @@ export function readLeaderboard(storage: ScoreStorage = localStorage): Leaderboa
   }
 }
 
+function nicknameKey(nickname: string): string {
+  return normalizeNickname(nickname).toLocaleLowerCase("ko-KR");
+}
+
+export function getBestScoreForNickname(
+  entries: LeaderboardEntry[],
+  nickname: string,
+): number {
+  const key = nicknameKey(nickname);
+  if (!key) return 0;
+  return entries.reduce(
+    (best, entry) => nicknameKey(entry.nickname) === key
+      ? Math.max(best, entry.score)
+      : best,
+    0,
+  );
+}
+
+export function getNicknameLeaderboard(
+  entries: LeaderboardEntry[],
+): LeaderboardEntry[] {
+  const bestByNickname = new Map<string, LeaderboardEntry>();
+  for (const entry of entries) {
+    const key = nicknameKey(entry.nickname);
+    const current = bestByNickname.get(key);
+    if (!current || entry.score > current.score) bestByNickname.set(key, entry);
+  }
+  return [...bestByNickname.values()].sort(
+    (a, b) => b.score - a.score || a.createdAt - b.createdAt,
+  );
+}
+
 export function recordLeaderboardScore(
   entry: Omit<LeaderboardEntry, "id" | "createdAt">,
   storage: ScoreStorage = localStorage,

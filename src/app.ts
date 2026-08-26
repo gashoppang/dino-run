@@ -14,6 +14,8 @@ import {
 } from "./game/engine";
 import { createCanvasRenderer } from "./game/canvasRenderer";
 import {
+  getBestScoreForNickname,
+  getNicknameLeaderboard,
   normalizeNickname,
   readLeaderboard,
   recordLeaderboardScore,
@@ -46,35 +48,10 @@ interface PlayerController {
   render: (state: GameState) => void;
 }
 
-const HIGH_SCORE_KEYS: Record<PlayerId, string> = {
-  "1p": "dino-run:high-score:v1",
-  "2p": "dino-run:high-score:2p:v1",
-};
-
 const app = document.querySelector<HTMLElement>("#app")!;
 if (!app) throw new Error("App root is unavailable.");
 
 let cleanupRoute: (() => void) | undefined;
-
-function readBestScore(player: PlayerId): number {
-  try {
-    const score = Number.parseInt(
-      localStorage.getItem(HIGH_SCORE_KEYS[player]) ?? "0",
-      10,
-    );
-    return Number.isFinite(score) ? Math.max(0, score) : 0;
-  } catch {
-    return 0;
-  }
-}
-
-function saveBestScore(player: PlayerId, score: number): void {
-  try {
-    localStorage.setItem(HIGH_SCORE_KEYS[player], String(score));
-  } catch {
-    // Storage can be unavailable in private or locked-down browser contexts.
-  }
-}
 
 function requireElement<T extends Element>(
   selector: string,
@@ -162,7 +139,7 @@ function playerMarkup(player: PlayerId): string {
       <div class="player-badge" aria-hidden="true"><b>${playerLabel}</b><span>${isPlayerOne ? "W / S" : "↑ / ↓"}</span></div>
       <div class="hud" aria-live="polite">
         <div class="hud-item"><span>거리</span><strong data-score>00000</strong></div>
-        <div class="hud-item hud-best"><span>최고</span><strong data-best>00000</strong></div>
+        <div class="hud-item hud-best"><span>개인 최고</span><strong data-best>00000</strong></div>
         <div class="speed-chip"><i></i><span data-speed>34</span> KM/H</div>
       </div>
       <div class="game-overlay is-visible" data-overlay>
@@ -190,7 +167,7 @@ function createPlayerController(player: PlayerId): PlayerController {
   const canvas = requireElement<HTMLCanvasElement>(".game-canvas", stage);
   const context = canvas.getContext("2d");
   if (!context) throw new Error("Canvas 2D context is unavailable.");
-  const bestScore = readBestScore(player);
+  const bestScore = 0;
 
   return {
     id: player,
@@ -259,6 +236,7 @@ function beginOrResume(player: PlayerController): void {
       return;
     }
     player.nickname = nickname;
+    player.state.bestScore = getBestScoreForNickname(readLeaderboard(), nickname);
     player.nicknameInput.value = "";
     player.nicknameError.textContent = "";
     player.nicknameInput.removeAttribute("aria-invalid");
@@ -319,7 +297,6 @@ function mountGame(): () => void {
       tickGame(player.state, deltaSeconds);
       if (player.previousPhase === "running" && player.state.phase === "gameOver") {
         player.isNewBest = player.state.bestScore > player.previousBest;
-        saveBestScore(player.id, player.state.bestScore);
         recordLeaderboardScore({
           nickname: player.nickname,
           player: player.id,
@@ -403,7 +380,7 @@ function mountGame(): () => void {
 
 function renderLeaderboard(): void {
   document.title = "리더보드 · 공룡 게임";
-  const scores = readLeaderboard().slice(0, 10);
+  const scores = getNicknameLeaderboard(readLeaderboard()).slice(0, 10);
   app.innerHTML = `
     <main class="subpage-view">
       ${homeLink()}

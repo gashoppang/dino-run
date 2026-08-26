@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   LEADERBOARD_KEY,
+  getBestScoreForNickname,
+  getNicknameLeaderboard,
   normalizeNickname,
   parseLeaderboard,
   recordLeaderboardScore,
@@ -43,5 +45,19 @@ describe("leaderboard storage", () => {
   it("ignores corrupt stored records", () => {
     expect(parseLeaderboard("not-json")).toEqual([]);
     expect(parseLeaderboard('[{"nickname":"공룡"}]')).toEqual([]);
+  });
+
+  it("shares one personal best across 1P and 2P for the same nickname", () => {
+    const storage = createStorage();
+    recordLeaderboardScore({ nickname: "DINO", player: "1p", score: 40 }, storage, 1);
+    const entries = recordLeaderboardScore(
+      { nickname: "dino", player: "2p", score: 90 },
+      storage,
+      2,
+    );
+
+    expect(getBestScoreForNickname(entries, "Dino")).toBe(90);
+    expect(getNicknameLeaderboard(entries)).toHaveLength(1);
+    expect(getNicknameLeaderboard(entries)[0]?.player).toBe("2p");
   });
 });
