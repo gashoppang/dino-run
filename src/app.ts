@@ -189,7 +189,7 @@ function updatePlayerInterface(player: PlayerController): void {
   if (state.phase === "gameOver") {
     player.overlayTitle.textContent = `${state.score}점`;
     player.overlayCopy.textContent = player.isNewBest
-      ? "신기록입니다"
+      ? `${player.name}님의 신기록입니다`
       : `${player.studentId} ${player.name}의 최고기록 ${state.bestScore}점`;
   }
 }
