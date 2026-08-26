@@ -53,6 +53,7 @@ const GRAVITY = 2250;
 const JUMP_VELOCITY = -810;
 const STARTING_SPEED = 340;
 const MAX_SPEED = 720;
+const MIN_SPAWN_DELAY = 0.72;
 const OBSTACLE_SPECS = {
   "cactus-small": { width: 34, height: 50, y: GROUND_Y - 50 },
   "cactus-large": { width: 48, height: 82, y: GROUND_Y - 82 },
@@ -143,7 +144,7 @@ function getNextSpawnDelay(speed: number, random: () => number): number {
       ? 1 + varianceRoll * 0.6
       : 1.72 + varianceRoll * 0.55;
   const speedFactor = Math.min(0.28, (speed - STARTING_SPEED) / 1500);
-  return Math.max(0.65, baseDelay - speedFactor);
+  return Math.max(MIN_SPAWN_DELAY, baseDelay - speedFactor);
 }
 
 function spawnObstacle(state: GameState, random: () => number): void {

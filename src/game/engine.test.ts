@@ -131,6 +131,16 @@ describe("game engine", () => {
     expect(breatherGap).toBeCloseTo(1.995);
   });
 
+  it("keeps the minimum obstacle gap at 0.72 seconds at top speed", () => {
+    const state = createGameState();
+    startGame(state);
+    state.distance = 10000;
+    state.spawnTimer = 0;
+    const rolls = [0.5, 0, 0, 0];
+    tickGame(state, 1 / 60, () => rolls.shift() ?? 0);
+    expect(state.spawnTimer).toBe(0.72);
+  });
+
   it("ends the game and updates the best score on collision", () => {
     const state = createGameState(2);
     startGame(state);
