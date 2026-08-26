@@ -13,9 +13,14 @@ import {
   type GameState,
 } from "./game/engine";
 import { createCanvasRenderer } from "./game/canvasRenderer";
+import {
+  normalizeNickname,
+  readLeaderboard,
+  recordLeaderboardScore,
+  type PlayerId,
+} from "./leaderboard";
 
 type Route = "/" | "/game" | "/leaderboard" | "/settings";
-type PlayerId = "1p" | "2p";
 
 interface PlayerController {
   id: PlayerId;
@@ -23,6 +28,7 @@ interface PlayerController {
   previousPhase: GamePhase;
   previousBest: number;
   isNewBest: boolean;
+  nickname: string;
   canvas: HTMLCanvasElement;
   stage: HTMLElement;
   score: HTMLElement;
@@ -31,6 +37,9 @@ interface PlayerController {
   overlay: HTMLElement;
   overlayTitle: HTMLElement;
   overlayCopy: HTMLElement;
+  nicknameForm: HTMLFormElement;
+  nicknameInput: HTMLInputElement;
+  nicknameError: HTMLElement;
   startButton: HTMLButtonElement;
   jumpButton: HTMLButtonElement;
   duckButton: HTMLButtonElement;
@@ -74,6 +83,19 @@ function requireElement<T extends Element>(
   const element = root.querySelector<T>(selector);
   if (!element) throw new Error(`Required element not found: ${selector}`);
   return element;
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(
+    /[&<>"']/g,
+    (character) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;",
+    })[character]!,
+  );
 }
 
 function getRoute(pathname = window.location.pathname): Route {
@@ -132,7 +154,6 @@ function playerMarkup(player: PlayerId): string {
   const isPlayerOne = player === "1p";
   const playerLabel = isPlayerOne ? "1P" : "2P";
   const jumpKey = isPlayerOne ? "W" : "↑";
-  const duckKey = isPlayerOne ? "S" : "↓";
   return `
     <section class="player-stage player-${player}" data-player="${player}" aria-label="${playerLabel} 게임 화면">
       <canvas class="game-canvas" tabindex="0" aria-label="${playerLabel} 공룡 러너 캔버스">
@@ -146,8 +167,15 @@ function playerMarkup(player: PlayerId): string {
       </div>
       <div class="game-overlay is-visible" data-overlay>
         <h2 data-overlay-title>${playerLabel} 준비</h2>
-        <p data-overlay-copy>${jumpKey} 점프 · ${duckKey} 숙이기</p>
-        <button data-start type="button"><span>달리기</span><b>${jumpKey}</b></button>
+        <p data-overlay-copy>닉네임을 입력하고 달리기를 시작하세요.</p>
+        <form class="nickname-form" data-nickname-form novalidate>
+          <label>
+            <span class="sr-only">${playerLabel} 닉네임</span>
+            <input data-nickname type="text" maxlength="12" autocomplete="off" placeholder="닉네임" aria-describedby="${player}-nickname-error">
+          </label>
+          <button data-start type="submit"><span>달리기</span><b>${jumpKey}</b></button>
+          <small id="${player}-nickname-error" data-nickname-error aria-live="polite"></small>
+        </form>
       </div>
       <div class="mobile-controls" aria-label="${playerLabel} 터치 조작">
         <button data-duck type="button" aria-label="${playerLabel} 숙이기"><b>↓</b><span>숙이기</span></button>
@@ -170,6 +198,7 @@ function createPlayerController(player: PlayerId): PlayerController {
     previousPhase: "ready",
     previousBest: bestScore,
     isNewBest: false,
+    nickname: "",
     canvas,
     stage,
     score: requireElement("[data-score]", stage),
@@ -178,6 +207,9 @@ function createPlayerController(player: PlayerId): PlayerController {
     overlay: requireElement("[data-overlay]", stage),
     overlayTitle: requireElement("[data-overlay-title]", stage),
     overlayCopy: requireElement("[data-overlay-copy]", stage),
+    nicknameForm: requireElement("[data-nickname-form]", stage),
+    nicknameInput: requireElement("[data-nickname]", stage),
+    nicknameError: requireElement("[data-nickname-error]", stage),
     startButton: requireElement("[data-start]", stage),
     jumpButton: requireElement("[data-jump]", stage),
     duckButton: requireElement("[data-duck]", stage),
@@ -189,16 +221,18 @@ function updatePlayerInterface(player: PlayerController): void {
   const { state } = player;
   const playerLabel = player.id === "1p" ? "1P" : "2P";
   const jumpKey = player.id === "1p" ? "W" : "↑";
-  const duckKey = player.id === "1p" ? "S" : "↓";
   player.score.textContent = formatScore(state.score);
   player.best.textContent = formatScore(state.bestScore);
   player.speed.textContent = String(Math.round(state.speed / 10));
   player.stage.dataset.phase = state.phase;
   player.overlay.classList.toggle("is-visible", state.phase !== "running");
+  const isPaused = state.phase === "paused";
+  player.nicknameForm.classList.toggle("is-resume", isPaused);
+  player.nicknameInput.disabled = isPaused;
 
   if (state.phase === "ready") {
     player.overlayTitle.textContent = `${playerLabel} 준비`;
-    player.overlayCopy.textContent = `${jumpKey} 점프 · ${duckKey} 숙이기`;
+    player.overlayCopy.textContent = "닉네임을 입력하고 달리기를 시작하세요.";
     player.startButton.innerHTML = `<span>달리기</span><b>${jumpKey}</b>`;
   } else if (state.phase === "paused") {
     player.overlayTitle.textContent = `${playerLabel} 일시정지`;
@@ -207,8 +241,8 @@ function updatePlayerInterface(player: PlayerController): void {
   } else if (state.phase === "gameOver") {
     player.overlayTitle.textContent = `${formatScore(state.score)}점`;
     player.overlayCopy.textContent = player.isNewBest
-      ? `${playerLabel}의 새로운 최고 기록입니다.`
-      : `최고 기록 ${formatScore(state.bestScore)}점`;
+      ? `${player.nickname}님의 새로운 최고 기록입니다.`
+      : `${player.nickname}님 · 최고 기록 ${formatScore(state.bestScore)}점`;
     player.startButton.innerHTML = `<span>다시 달리기</span><b>${jumpKey}</b>`;
   }
 }
@@ -217,6 +251,17 @@ function beginOrResume(player: PlayerController): void {
   if (player.state.phase === "paused") {
     resumeGame(player.state);
   } else {
+    const nickname = normalizeNickname(player.nicknameInput.value);
+    if (!nickname) {
+      player.nicknameError.textContent = "닉네임을 입력해주세요.";
+      player.nicknameInput.setAttribute("aria-invalid", "true");
+      player.nicknameInput.focus({ preventScroll: true });
+      return;
+    }
+    player.nickname = nickname;
+    player.nicknameInput.value = "";
+    player.nicknameError.textContent = "";
+    player.nicknameInput.removeAttribute("aria-invalid");
     startGame(player.state);
     player.isNewBest = false;
   }
@@ -275,6 +320,11 @@ function mountGame(): () => void {
       if (player.previousPhase === "running" && player.state.phase === "gameOver") {
         player.isNewBest = player.state.bestScore > player.previousBest;
         saveBestScore(player.id, player.state.bestScore);
+        recordLeaderboardScore({
+          nickname: player.nickname,
+          player: player.id,
+          score: player.state.score,
+        });
       }
       updatePlayerInterface(player);
       player.render(player.state);
@@ -283,6 +333,7 @@ function mountGame(): () => void {
   };
 
   const handleKeyDown = (event: KeyboardEvent): void => {
+    if (event.target instanceof HTMLInputElement) return;
     if (event.target instanceof HTMLButtonElement && event.code === "Space") return;
     const player = event.code === "KeyW" || event.code === "KeyS"
       ? players[0]
@@ -310,7 +361,16 @@ function mountGame(): () => void {
   };
 
   for (const player of players) {
-    player.startButton.addEventListener("click", () => beginOrResume(player));
+    player.nicknameForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      beginOrResume(player);
+    });
+    player.nicknameInput.addEventListener("input", () => {
+      if (normalizeNickname(player.nicknameInput.value)) {
+        player.nicknameError.textContent = "";
+        player.nicknameInput.removeAttribute("aria-invalid");
+      }
+    });
     player.jumpButton.addEventListener("pointerdown", (event) => {
       event.preventDefault();
       requestJump(player);
@@ -343,10 +403,7 @@ function mountGame(): () => void {
 
 function renderLeaderboard(): void {
   document.title = "리더보드 · 공룡 게임";
-  const scores = [
-    { player: "1P", score: readBestScore("1p"), tone: "coral" },
-    { player: "2P", score: readBestScore("2p"), tone: "teal" },
-  ].sort((a, b) => b.score - a.score);
+  const scores = readLeaderboard().slice(0, 10);
   app.innerHTML = `
     <main class="subpage-view">
       ${homeLink()}
@@ -356,16 +413,17 @@ function renderLeaderboard(): void {
         <p>이 기기에서 달성한 최고 기록입니다.</p>
       </header>
       <ol class="leaderboard-list">
-        ${scores.map((entry, index) => `
-          <li class="score-row score-${entry.tone}">
+        ${scores.length > 0 ? scores.map((entry, index) => `
+          <li class="score-row score-${entry.player === "1p" ? "coral" : "teal"}">
             <span class="rank">${String(index + 1).padStart(2, "0")}</span>
-            <b>${entry.player}</b>
+            <span class="score-name"><b>${escapeHtml(entry.nickname)}</b><small>${entry.player.toUpperCase()}</small></span>
             <strong>${formatScore(entry.score)}</strong>
           </li>
-        `).join("")}
-        <li class="score-row is-placeholder"><span class="rank">03</span><b>빈 자리</b><strong>-----</strong></li>
+        `).join("") : `
+          <li class="score-row is-placeholder"><span class="rank">--</span><span class="score-name"><b>아직 기록이 없습니다</b><small>게임을 시작해보세요</small></span><strong>-----</strong></li>
+        `}
       </ol>
-      <p class="mock-note">온라인 순위와 플레이어 이름은 다음 단계에서 추가됩니다.</p>
+      <p class="mock-note">이 기기에서 완료한 게임 기록이 점수순으로 최대 10개 표시됩니다.</p>
     </main>
   `;
 }
