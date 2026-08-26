@@ -4,6 +4,7 @@ import {
   formatScore,
   jump,
   pauseGame,
+  resetGame,
   resumeGame,
   setDucking,
   setViewportWidth,
@@ -283,13 +284,20 @@ function mountGame(): () => void {
       (player) => player.state.phase === "gameOver" && player.scoreRecorded,
     );
     sharedControl.classList.toggle("is-visible", hasPausedPlayer || isReady || canReplay);
-    identityFields.hidden = hasPausedPlayer;
+    identityFields.hidden = hasPausedPlayer || canReplay;
     if (hasPausedPlayer) {
+      sharedTitle.hidden = false;
       sharedTitle.textContent = "일시정지";
       sharedButtonLabel.textContent = "계속";
       identityError.hidden = true;
       sharedCopy.hidden = true;
+    } else if (canReplay) {
+      sharedTitle.hidden = true;
+      sharedButtonLabel.textContent = "다시 시작하기";
+      identityError.hidden = true;
+      sharedCopy.hidden = true;
     } else {
+      sharedTitle.hidden = false;
       sharedTitle.textContent = "플레이어 정보";
       sharedButtonLabel.textContent = "시작";
       identityError.hidden = false;
@@ -307,7 +315,22 @@ function mountGame(): () => void {
       const canReplay = players.every(
         (player) => player.state.phase === "gameOver" && player.scoreRecorded,
       );
-      if (!canStart && !canReplay) return;
+      if (canReplay) {
+        for (const player of players) {
+          resetGame(player.state);
+          player.studentId = "";
+          player.name = "";
+          player.scoreRecorded = false;
+          player.isNewBest = false;
+          updatePlayerInterface(player);
+          player.render(player.state);
+        }
+        clearIdentityForm();
+        previousTime = performance.now();
+        updateSharedControl();
+        return;
+      }
+      if (!canStart) return;
       if (!readIdentityForm()) return;
       const leaderboard = readLeaderboard();
       for (const player of players) {

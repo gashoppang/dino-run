@@ -4,6 +4,7 @@ import {
   createGameState,
   jump,
   pauseGame,
+  resetGame,
   resumeGame,
   setDucking,
   setViewportWidth,
@@ -18,6 +19,30 @@ describe("game engine", () => {
     expect(state.phase).toBe("running");
     expect(state.bestScore).toBe(321);
     expect(state.score).toBe(0);
+  });
+
+  it("resets a finished round to the ready state", () => {
+    const state = createGameState(50);
+    setViewportWidth(state, 1800);
+    startGame(state);
+    state.score = 40;
+    state.distance = 480;
+    state.obstacles.push({
+      id: 1,
+      kind: "cactus-small",
+      x: 500,
+      y: GROUND_Y - 50,
+      width: 34,
+      height: 50,
+    });
+
+    resetGame(state);
+
+    expect(state.phase).toBe("ready");
+    expect(state.score).toBe(0);
+    expect(state.bestScore).toBe(0);
+    expect(state.obstacles).toEqual([]);
+    expect(state.viewportWidth).toBe(1800);
   });
 
   it("jumps and lands back on the ground", () => {

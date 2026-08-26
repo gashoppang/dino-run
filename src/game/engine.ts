@@ -101,6 +101,12 @@ export function startGame(state: GameState): void {
   state.previousPhase = "running";
 }
 
+export function resetGame(state: GameState): void {
+  const viewportWidth = state.viewportWidth;
+  Object.assign(state, createGameState());
+  state.viewportWidth = viewportWidth;
+}
+
 export function setViewportWidth(state: GameState, width: number): void {
   state.viewportWidth = Math.max(480, Math.min(2400, width));
 }
