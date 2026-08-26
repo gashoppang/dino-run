@@ -34,7 +34,6 @@ interface PlayerController {
   canvas: HTMLCanvasElement;
   stage: HTMLElement;
   score: HTMLElement;
-  best: HTMLElement;
   speed: HTMLElement;
   overlay: HTMLElement;
   overlayTitle: HTMLElement;
@@ -136,7 +135,6 @@ function playerMarkup(player: PlayerId): string {
       <div class="player-badge" aria-hidden="true"><b>${playerLabel}</b><span>${isPlayerOne ? "W / S" : "↑ / ↓"}</span></div>
       <div class="hud" aria-live="polite">
         <div class="hud-item"><span>거리</span><strong data-score>00000</strong></div>
-        <div class="hud-item hud-best"><span>개인 최고</span><strong data-best>00000</strong></div>
         <div class="speed-chip"><i></i><span data-speed>34</span> KM/H</div>
       </div>
       <div class="game-overlay" data-overlay>
@@ -175,7 +173,6 @@ function createPlayerController(player: PlayerId): PlayerController {
     canvas,
     stage,
     score: requireElement("[data-score]", stage),
-    best: requireElement("[data-best]", stage),
     speed: requireElement("[data-speed]", stage),
     overlay: requireElement("[data-overlay]", stage),
     overlayTitle: requireElement("[data-overlay-title]", stage),
@@ -193,7 +190,6 @@ function createPlayerController(player: PlayerId): PlayerController {
 function updatePlayerInterface(player: PlayerController): void {
   const { state } = player;
   player.score.textContent = formatScore(state.score);
-  player.best.textContent = player.scoreRecorded ? formatScore(state.bestScore) : "-----";
   player.speed.textContent = String(Math.round(state.speed / 10));
   player.stage.dataset.phase = state.phase;
   player.overlay.classList.toggle("is-visible", state.phase === "gameOver");
