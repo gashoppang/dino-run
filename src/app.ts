@@ -204,7 +204,7 @@ function updatePlayerInterface(player: PlayerController): void {
     if (player.scoreRecorded) {
       player.overlayCopy.textContent = player.isNewBest
         ? "신기록입니다"
-        : `개인 최고 ${formatScore(state.bestScore)}점`;
+        : `${player.nickname}의 최고기록 ${formatScore(state.bestScore)}점`;
     } else {
       player.overlayCopy.textContent = "닉네임을 입력하세요.";
       player.recordButton.innerHTML = "<span>저장</span><b>↵</b>";
@@ -249,13 +249,15 @@ function mountGame(): () => void {
     );
     sharedControl.classList.toggle("is-visible", hasPausedPlayer || isReady || canReplay);
     if (hasPausedPlayer) {
+      sharedTitle.hidden = false;
       sharedTitle.textContent = "일시정지";
       sharedCopy.hidden = true;
     } else if (canReplay) {
-      sharedTitle.textContent = "준비";
+      sharedTitle.hidden = true;
       sharedCopy.textContent = "1P W · S / 2P ↑ · ↓";
       sharedCopy.hidden = false;
     } else {
+      sharedTitle.hidden = false;
       sharedTitle.textContent = "준비";
       sharedCopy.textContent = "1P W · S / 2P ↑ · ↓";
       sharedCopy.hidden = false;
