@@ -488,22 +488,37 @@ function renderLeaderboard(): () => void {
         <h1>리더보드</h1>
         <p>학번별 최고 기록</p>
       </header>
-      <ol class="leaderboard-list" data-leaderboard-list aria-live="polite"></ol>
+      <section class="leaderboard-board" data-leaderboard-board aria-live="polite">
+        <ol class="podium-list" data-podium-list aria-label="상위 3명"></ol>
+        <ol class="leaderboard-list" data-leaderboard-list aria-label="4위 이하"></ol>
+      </section>
     </main>
   `;
 
+  const podium = requireElement<HTMLOListElement>("[data-podium-list]", app);
   const list = requireElement<HTMLOListElement>("[data-leaderboard-list]", app);
   const updateList = (): void => {
     const scores = getStudentLeaderboard(readLeaderboard()).slice(0, 10);
-    list.innerHTML = scores.length > 0 ? scores.map((entry, index) => `
+    const topScores = scores.slice(0, 3);
+    const remainingScores = scores.slice(3);
+    podium.hidden = topScores.length === 0;
+    podium.innerHTML = topScores.map((entry, index) => `
+      <li class="podium-card" data-rank="${index + 1}">
+        <span class="podium-rank">${index + 1}등</span>
+        <span class="podium-name"><b>${escapeHtml(entry.name)}</b><small>${escapeHtml(entry.studentId || "이전 기록")}</small></span>
+        <strong>${formatScore(entry.score)}</strong>
+      </li>
+    `).join("");
+    list.hidden = scores.length > 0 && remainingScores.length === 0;
+    list.innerHTML = remainingScores.length > 0 ? remainingScores.map((entry, index) => `
       <li class="score-row">
-        <span class="rank">${String(index + 1).padStart(2, "0")}</span>
+        <span class="rank">${String(index + 4).padStart(2, "0")}</span>
         <span class="score-name"><b>${escapeHtml(entry.name)}</b><small>${escapeHtml(entry.studentId || "이전 기록")}</small></span>
         <strong>${formatScore(entry.score)}</strong>
       </li>
-    `).join("") : `
+    `).join("") : scores.length === 0 ? `
       <li class="score-row is-placeholder"><span class="rank">--</span><span class="score-name"><b>기록 없음</b></span><strong>-----</strong></li>
-    `;
+    ` : "";
   };
   const handleStorage = (event: StorageEvent): void => {
     if (event.key === LEADERBOARD_KEY || event.key === null) updateList();
