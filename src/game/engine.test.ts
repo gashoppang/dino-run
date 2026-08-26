@@ -43,6 +43,29 @@ describe("game engine", () => {
     expect(state.runner.height).toBe(standingHeight);
   });
 
+  it("lets a ducking runner pass under a bird", () => {
+    const createBird = () => ({
+      id: 1,
+      kind: "bird" as const,
+      x: 143,
+      y: GROUND_Y - 80,
+      width: 78,
+      height: 42,
+    });
+    const standingState = createGameState();
+    startGame(standingState);
+    standingState.obstacles.push(createBird());
+    tickGame(standingState, 1 / 60, () => 0.5);
+    expect(standingState.phase).toBe("gameOver");
+
+    const duckingState = createGameState();
+    startGame(duckingState);
+    setDucking(duckingState, true);
+    duckingState.obstacles.push(createBird());
+    tickGame(duckingState, 1 / 60, () => 0.5);
+    expect(duckingState.phase).toBe("running");
+  });
+
   it("ends the game and updates the best score on collision", () => {
     const state = createGameState(2);
     startGame(state);

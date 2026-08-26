@@ -130,7 +130,7 @@ function spawnObstacle(state: GameState, random: () => number): void {
     id: state.nextObstacleId++,
     kind,
     x: state.viewportWidth + 48,
-    y: isBird ? GROUND_Y - 76 : GROUND_Y - height,
+    y: isBird ? GROUND_Y - 80 : GROUND_Y - height,
     width,
     height,
   });
