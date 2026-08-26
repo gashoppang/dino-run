@@ -6,6 +6,7 @@ import {
   pauseGame,
   resumeGame,
   setDucking,
+  setViewportWidth,
   startGame,
   tickGame,
   type GamePhase,
@@ -254,6 +255,10 @@ function mountGame(): () => void {
         player.canvas.width = width;
         player.canvas.height = height;
       }
+      setViewportWidth(
+        player.state,
+        540 * (entry.contentRect.width / Math.max(1, entry.contentRect.height)),
+      );
       player.render(player.state);
     });
     observer.observe(player.canvas);

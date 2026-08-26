@@ -36,6 +36,7 @@ export interface GameState {
   spawnTimer: number;
   nextObstacleId: number;
   elapsed: number;
+  viewportWidth: number;
 }
 
 const RUNNER_X = 128;
@@ -72,14 +73,21 @@ export function createGameState(bestScore = 0): GameState {
     spawnTimer: 1.15,
     nextObstacleId: 1,
     elapsed: 0,
+    viewportWidth: WORLD_WIDTH,
   };
 }
 
 export function startGame(state: GameState): void {
   const bestScore = state.bestScore;
+  const viewportWidth = state.viewportWidth;
   Object.assign(state, createGameState(bestScore));
+  state.viewportWidth = viewportWidth;
   state.phase = "running";
   state.previousPhase = "running";
+}
+
+export function setViewportWidth(state: GameState, width: number): void {
+  state.viewportWidth = Math.max(480, Math.min(2400, width));
 }
 
 export function pauseGame(state: GameState): void {
@@ -121,7 +129,7 @@ function spawnObstacle(state: GameState, random: () => number): void {
   state.obstacles.push({
     id: state.nextObstacleId++,
     kind,
-    x: WORLD_WIDTH + 48,
+    x: state.viewportWidth + 48,
     y: isBird ? GROUND_Y - 76 : GROUND_Y - height,
     width,
     height,

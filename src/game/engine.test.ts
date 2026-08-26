@@ -6,6 +6,7 @@ import {
   pauseGame,
   resumeGame,
   setDucking,
+  setViewportWidth,
   startGame,
   tickGame,
 } from "./engine";
@@ -70,5 +71,16 @@ describe("game engine", () => {
     resumeGame(state);
     tickGame(state, 1 / 60, () => 0.5);
     expect(state.distance).toBeGreaterThan(distance);
+  });
+
+  it("expands the obstacle spawn edge without changing the world scale", () => {
+    const state = createGameState();
+    setViewportWidth(state, 1800);
+    startGame(state);
+    state.spawnTimer = 0;
+    tickGame(state, 1 / 60, () => 0.5);
+
+    expect(state.viewportWidth).toBe(1800);
+    expect(state.obstacles[0]?.x).toBeGreaterThan(1800);
   });
 });

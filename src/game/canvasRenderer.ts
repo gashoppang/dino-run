@@ -1,7 +1,6 @@
 import {
   GROUND_Y,
   WORLD_HEIGHT,
-  WORLD_WIDTH,
   type GameState,
   type ObstacleState,
 } from "./engine";
@@ -15,6 +14,17 @@ const COLORS = {
   tealDark: "#276b68",
   ground: "#1c333a",
 };
+
+export function getViewportMetrics(
+  pixelWidth: number,
+  pixelHeight: number,
+): { scale: number; viewportWidth: number } {
+  const scale = Math.max(1, pixelHeight) / WORLD_HEIGHT;
+  return {
+    scale,
+    viewportWidth: Math.max(1, pixelWidth) / scale,
+  };
+}
 
 function polygon(
   context: CanvasRenderingContext2D,
@@ -31,14 +41,18 @@ function polygon(
   context.fill();
 }
 
-function drawSky(context: CanvasRenderingContext2D, state: GameState): void {
+function drawSky(
+  context: CanvasRenderingContext2D,
+  state: GameState,
+  viewportWidth: number,
+): void {
   const sky = context.createLinearGradient(0, 0, 0, GROUND_Y);
   sky.addColorStop(0, "#142b39");
   sky.addColorStop(0.42, "#70485b");
   sky.addColorStop(0.72, "#d56d63");
   sky.addColorStop(1, "#f5ad78");
   context.fillStyle = sky;
-  context.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+  context.fillRect(0, 0, viewportWidth, WORLD_HEIGHT);
 
   const starAlpha = 0.28 + Math.min(0.42, state.score / 1200);
   context.fillStyle = `rgba(255, 235, 185, ${starAlpha})`;
@@ -46,23 +60,26 @@ function drawSky(context: CanvasRenderingContext2D, state: GameState): void {
     [84, 72, 2], [174, 132, 1], [278, 61, 2], [382, 111, 1],
     [505, 57, 1], [603, 136, 2], [744, 78, 1], [862, 121, 2],
   ];
-  for (const [x, y, size] of stars) context.fillRect(x, y, size, size);
+  for (let offset = 0; offset < viewportWidth + 960; offset += 960) {
+    for (const [x, y, size] of stars) context.fillRect(x + offset, y, size, size);
+  }
 
   context.save();
   context.beginPath();
-  context.arc(748, 255, 80, Math.PI, 0);
+  const sunX = viewportWidth * 0.78;
+  context.arc(sunX, 255, 80, Math.PI, 0);
   context.clip();
   context.fillStyle = COLORS.cream;
-  context.fillRect(668, 175, 160, 84);
+  context.fillRect(sunX - 80, 175, 160, 84);
   context.fillStyle = "rgba(213, 109, 99, 0.38)";
   for (let line = 0; line < 5; line += 1) {
-    context.fillRect(670, 200 + line * 13, 158, 4);
+    context.fillRect(sunX - 78, 200 + line * 13, 158, 4);
   }
   context.restore();
 
   const cloudShift = -((state.distance * 0.035) % 1080);
   context.fillStyle = "rgba(255, 231, 181, 0.22)";
-  for (const offset of [0, 540, 1080]) {
+  for (let offset = -540; offset < viewportWidth + 540; offset += 540) {
     const x = cloudShift + offset;
     context.fillRect(x + 38, 118, 94, 7);
     context.fillRect(x + 58, 109, 54, 9);
@@ -70,11 +87,15 @@ function drawSky(context: CanvasRenderingContext2D, state: GameState): void {
   }
 }
 
-function drawMountains(context: CanvasRenderingContext2D, state: GameState): void {
+function drawMountains(
+  context: CanvasRenderingContext2D,
+  state: GameState,
+  viewportWidth: number,
+): void {
   const backShift = -((state.distance * 0.025) % 360);
   context.save();
   context.translate(backShift, 0);
-  for (let repeat = 0; repeat < 4; repeat += 1) {
+  for (let repeat = 0; repeat < Math.ceil(viewportWidth / 360) + 2; repeat += 1) {
     const x = repeat * 360;
     polygon(context, [
       [x - 40, GROUND_Y], [x + 72, 258], [x + 152, 368],
@@ -90,7 +111,7 @@ function drawMountains(context: CanvasRenderingContext2D, state: GameState): voi
   const ridgeShift = -((state.distance * 0.08) % 420);
   context.save();
   context.translate(ridgeShift, 0);
-  for (let repeat = 0; repeat < 4; repeat += 1) {
+  for (let repeat = 0; repeat < Math.ceil(viewportWidth / 420) + 2; repeat += 1) {
     const x = repeat * 420;
     polygon(context, [
       [x - 30, GROUND_Y], [x + 68, 342], [x + 152, 401],
@@ -100,22 +121,26 @@ function drawMountains(context: CanvasRenderingContext2D, state: GameState): voi
   context.restore();
 }
 
-function drawGround(context: CanvasRenderingContext2D, state: GameState): void {
+function drawGround(
+  context: CanvasRenderingContext2D,
+  state: GameState,
+  viewportWidth: number,
+): void {
   const ground = context.createLinearGradient(0, GROUND_Y, 0, WORLD_HEIGHT);
   ground.addColorStop(0, "#263f45");
   ground.addColorStop(1, "#10252e");
   context.fillStyle = ground;
-  context.fillRect(0, GROUND_Y, WORLD_WIDTH, WORLD_HEIGHT - GROUND_Y);
+  context.fillRect(0, GROUND_Y, viewportWidth, WORLD_HEIGHT - GROUND_Y);
   context.fillStyle = COLORS.cream;
-  context.fillRect(0, GROUND_Y, WORLD_WIDTH, 4);
+  context.fillRect(0, GROUND_Y, viewportWidth, 4);
   context.fillStyle = "rgba(255, 231, 181, 0.28)";
   const trackShift = -(state.distance % 96);
-  for (let x = trackShift - 96; x < WORLD_WIDTH + 96; x += 96) {
+  for (let x = trackShift - 96; x < viewportWidth + 96; x += 96) {
     context.fillRect(x, GROUND_Y + 31, 20, 4);
     context.fillRect(x + 44, GROUND_Y + 66, 8, 3);
   }
   context.fillStyle = "rgba(92, 184, 167, 0.12)";
-  context.fillRect(0, GROUND_Y + 92, WORLD_WIDTH, 1);
+  context.fillRect(0, GROUND_Y + 92, viewportWidth, 1);
 }
 
 function drawDust(context: CanvasRenderingContext2D, state: GameState): void {
@@ -209,23 +234,32 @@ export function drawObstacle(
   context.restore();
 }
 
-function drawSpeedLines(context: CanvasRenderingContext2D, state: GameState): void {
+function drawSpeedLines(
+  context: CanvasRenderingContext2D,
+  state: GameState,
+  viewportWidth: number,
+): void {
   if (state.phase !== "running" || state.speed < 430) return;
   const alpha = Math.min(0.16, (state.speed - 420) / 1800);
   context.fillStyle = `rgba(255, 231, 181, ${alpha})`;
   const shift = -((state.distance * 1.4) % 230);
-  for (let x = shift; x < WORLD_WIDTH + 240; x += 230) {
+  for (let x = shift; x < viewportWidth + 240; x += 230) {
     context.fillRect(x, 190, 82, 2);
     context.fillRect(x + 118, 310, 46, 2);
   }
 }
 
-function drawVignette(context: CanvasRenderingContext2D): void {
-  const vignette = context.createRadialGradient(480, 260, 190, 480, 270, 590);
+function drawVignette(
+  context: CanvasRenderingContext2D,
+  viewportWidth: number,
+): void {
+  const centerX = viewportWidth / 2;
+  const radius = Math.max(590, viewportWidth * 0.62);
+  const vignette = context.createRadialGradient(centerX, 260, 190, centerX, 270, radius);
   vignette.addColorStop(0, "rgba(5, 17, 23, 0)");
   vignette.addColorStop(1, "rgba(5, 17, 23, 0.34)");
   context.fillStyle = vignette;
-  context.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+  context.fillRect(0, 0, viewportWidth, WORLD_HEIGHT);
 }
 
 export function renderGame(
@@ -233,20 +267,19 @@ export function renderGame(
   context: CanvasRenderingContext2D,
   state: GameState,
 ): void {
-  const scaleX = canvas.width / WORLD_WIDTH;
-  const scaleY = canvas.height / WORLD_HEIGHT;
-  context.setTransform(scaleX, 0, 0, scaleY, 0, 0);
-  context.clearRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+  const { scale, viewportWidth } = getViewportMetrics(canvas.width, canvas.height);
+  context.setTransform(scale, 0, 0, scale, 0, 0);
+  context.clearRect(0, 0, viewportWidth, WORLD_HEIGHT);
   context.imageSmoothingEnabled = false;
 
-  drawSky(context, state);
-  drawMountains(context, state);
-  drawGround(context, state);
-  drawSpeedLines(context, state);
+  drawSky(context, state, viewportWidth);
+  drawMountains(context, state, viewportWidth);
+  drawGround(context, state, viewportWidth);
+  drawSpeedLines(context, state, viewportWidth);
   drawDust(context, state);
   drawRunner(context, state);
   for (const obstacle of state.obstacles) drawObstacle(context, obstacle, state.elapsed);
-  drawVignette(context);
+  drawVignette(context, viewportWidth);
 }
 
 export function createCanvasRenderer(

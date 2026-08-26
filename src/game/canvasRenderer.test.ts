@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { drawObstacle } from "./canvasRenderer";
+import { drawObstacle, getViewportMetrics } from "./canvasRenderer";
 import type { ObstacleState } from "./engine";
 
 function createContextMock(): CanvasRenderingContext2D {
@@ -17,6 +17,13 @@ function createContextMock(): CanvasRenderingContext2D {
 }
 
 describe("standard canvas obstacle renderer", () => {
+  it("keeps one uniform scale and expands a wide split-screen viewport", () => {
+    const metrics = getViewportMetrics(1920, 540);
+
+    expect(metrics.scale).toBe(1);
+    expect(metrics.viewportWidth).toBe(1920);
+  });
+
   it.each([
     ["cactus", 6],
     ["bird", 6],
