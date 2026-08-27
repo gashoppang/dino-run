@@ -154,6 +154,13 @@ export async function DELETE(request: Request): Promise<Response> {
     if (body?.confirmation !== "리더보드 초기화") {
       return json({ error: "초기화 확인이 필요합니다." }, 400);
     }
+    const resetPassword = process.env.LEADERBOARD_RESET_PASSWORD;
+    if (!resetPassword) {
+      return json({ error: "초기화 비밀번호가 설정되지 않았습니다." }, 503);
+    }
+    if (body.password !== resetPassword) {
+      return json({ error: "비밀번호가 올바르지 않습니다." }, 401);
+    }
     const database = getSql();
     const deletedRows = await database<{ id: string }[]>`
       DELETE FROM leaderboard_scores RETURNING id

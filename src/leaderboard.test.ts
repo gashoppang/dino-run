@@ -81,10 +81,22 @@ describe("leaderboard", () => {
       JSON.stringify({ deleted: 7 }),
       { status: 200, headers: { "Content-Type": "application/json" } },
     )));
-    await expect(resetLeaderboard()).resolves.toBe(7);
+    await expect(resetLeaderboard("test-password")).resolves.toBe(7);
     expect(fetch).toHaveBeenCalledWith("/api/leaderboard", expect.objectContaining({
       method: "DELETE",
-      body: JSON.stringify({ confirmation: "리더보드 초기화" }),
+      body: JSON.stringify({
+        confirmation: "리더보드 초기화",
+        password: "test-password",
+      }),
     }));
+  });
+
+  it("reports an incorrect reset password", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(
+      JSON.stringify({ error: "비밀번호가 올바르지 않습니다." }),
+      { status: 401, headers: { "Content-Type": "application/json" } },
+    )));
+    await expect(resetLeaderboard("wrong"))
+      .rejects.toThrow("비밀번호가 올바르지 않습니다.");
   });
 });

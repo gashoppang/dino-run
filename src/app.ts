@@ -685,18 +685,23 @@ function renderSettings(): void {
     applyGameSettings(gameSettings);
   });
   resetButton.addEventListener("click", async () => {
-    if (!window.confirm("리더보드의 모든 기록을 삭제할까요? 이 작업은 되돌릴 수 없습니다.")) {
+    const password = window.prompt("리더보드 초기화 비밀번호를 입력하세요.");
+    if (password === null) return;
+    if (!password) {
+      status.textContent = "비밀번호를 입력하세요.";
       return;
     }
     resetButton.disabled = true;
     status.textContent = "초기화 중입니다.";
     try {
-      const deleted = await resetLeaderboard();
+      const deleted = await resetLeaderboard(password);
       status.textContent = deleted > 0
         ? `${deleted}개의 기록을 삭제했습니다.`
         : "삭제할 기록이 없습니다.";
-    } catch {
-      status.textContent = "리더보드를 초기화하지 못했습니다.";
+    } catch (error) {
+      status.textContent = error instanceof Error
+        ? error.message
+        : "리더보드를 초기화하지 못했습니다.";
     } finally {
       resetButton.disabled = false;
     }
