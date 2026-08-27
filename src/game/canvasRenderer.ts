@@ -249,20 +249,45 @@ export function drawItem(
   context.fillStyle = "rgba(11, 29, 37, 0.45)";
   context.fillRect(4, 7, item.width, item.height);
   polygon(context, [[center, 0], [item.width, center], [center, item.height], [0, center]], ITEM_COLORS[item.kind]);
-  context.fillStyle = "rgba(18, 43, 52, 0.9)";
+  const iconColor = "rgba(18, 43, 52, 0.94)";
+  const highlight = "rgba(255, 248, 218, 0.7)";
+  context.fillStyle = iconColor;
 
   if (item.kind === "shield") {
-    polygon(context, [[center, 9], [33, 14], [30, 29], [center, 35], [12, 29], [9, 14]], "rgba(18, 43, 52, 0.9)");
+    polygon(context, [[21, 7], [34, 12], [32, 27], [27, 34], [21, 38], [15, 34], [10, 27], [8, 12]], iconColor);
+    polygon(context, [[21, 12], [29, 15], [27, 26], [21, 32]], highlight);
   } else if (item.kind === "giant") {
-    context.fillRect(10, 17, 22, 10);
-    context.fillRect(16, 11, 10, 22);
-  } else if (item.kind === "speed-self" || item.kind === "speed-rival") {
-    polygon(context, [[25, 8], [12, 23], [21, 23], [16, 35], [32, 18], [23, 18]], "rgba(18, 43, 52, 0.9)");
+    context.fillRect(18, 18, 7, 7);
+    polygon(context, [[17, 17], [8, 8], [8, 14], [4, 14], [4, 4], [14, 4], [14, 8]], iconColor);
+    polygon(context, [[25, 17], [34, 8], [34, 14], [38, 14], [38, 4], [28, 4], [28, 8]], iconColor);
+    polygon(context, [[17, 25], [8, 34], [8, 28], [4, 28], [4, 38], [14, 38], [14, 34]], iconColor);
+    polygon(context, [[25, 25], [34, 34], [34, 28], [38, 28], [38, 38], [28, 38], [28, 34]], iconColor);
+  } else if (item.kind === "speed-self") {
+    polygon(context, [[7, 10], [18, 21], [7, 32], [13, 32], [24, 21], [13, 10]], iconColor);
+    polygon(context, [[19, 10], [30, 21], [19, 32], [25, 32], [36, 21], [25, 10]], iconColor);
+    context.fillStyle = highlight;
+    context.fillRect(7, 19, 25, 4);
+  } else if (item.kind === "speed-rival") {
+    context.fillRect(18, 18, 7, 7);
+    context.fillRect(19, 5, 5, 10);
+    context.fillRect(19, 28, 5, 10);
+    context.fillRect(5, 19, 10, 5);
+    context.fillRect(28, 19, 10, 5);
+    context.fillRect(11, 11, 5, 3);
+    context.fillRect(27, 11, 5, 3);
+    context.fillRect(11, 29, 5, 3);
+    context.fillRect(27, 29, 5, 3);
   } else if (item.kind === "super-jump") {
-    polygon(context, [[21, 7], [34, 22], [27, 22], [27, 34], [15, 34], [15, 22], [8, 22]], "rgba(18, 43, 52, 0.9)");
+    context.fillRect(7, 34, 28, 4);
+    context.fillRect(12, 29, 18, 3);
+    polygon(context, [[21, 5], [34, 19], [27, 19], [27, 27], [15, 27], [15, 19], [8, 19]], iconColor);
   } else {
-    polygon(context, [[21, 28], [8, 13], [9, 29], [21, 35]], "rgba(18, 43, 52, 0.9)");
-    polygon(context, [[21, 28], [34, 13], [33, 29], [21, 35]], "rgba(18, 43, 52, 0.9)");
+    context.fillRect(19, 17, 5, 18);
+    polygon(context, [[19, 19], [9, 7], [4, 10], [9, 17], [3, 16], [8, 24], [4, 25], [13, 34], [19, 31]], iconColor);
+    polygon(context, [[24, 19], [34, 7], [39, 10], [34, 17], [40, 16], [35, 24], [39, 25], [30, 34], [24, 31]], iconColor);
+    context.fillStyle = highlight;
+    context.fillRect(8, 13, 7, 3);
+    context.fillRect(28, 13, 7, 3);
   }
   context.restore();
 }
