@@ -75,6 +75,7 @@ export interface GameState {
   speed: number;
   spawnTimer: number;
   itemSpawnTimer: number;
+  jumpBufferTimer: number;
   nextObstacleId: number;
   nextItemId: number;
   elapsed: number;
@@ -88,6 +89,7 @@ const DUCK_HEIGHT = 48;
 const GRAVITY = 2250;
 const JUMP_VELOCITY = -810;
 const WING_FLAP_VELOCITY = -470;
+const JUMP_BUFFER_DURATION = 0.12;
 const STARTING_SPEED = 340;
 const MAX_SPEED = 720;
 const SPEED_BOOST_MULTIPLIER = 1.28;
@@ -149,6 +151,7 @@ export function createGameState(bestScore = 0): GameState {
     speed: STARTING_SPEED,
     spawnTimer: 1.15,
     itemSpawnTimer: 8,
+    jumpBufferTimer: 0,
     nextObstacleId: 1,
     nextItemId: 1,
     elapsed: 0,
@@ -191,13 +194,18 @@ export function resumeGame(state: GameState): void {
 export function jump(state: GameState): boolean {
   if (state.phase !== "running") return false;
   if (state.effects.wings > 0) {
+    state.jumpBufferTimer = 0;
     state.runner.ducking = false;
     state.runner.height = RUNNER_HEIGHT;
     state.runner.grounded = false;
     state.runner.velocityY = WING_FLAP_VELOCITY;
     return true;
   }
-  if (!state.runner.grounded) return false;
+  if (!state.runner.grounded) {
+    state.jumpBufferTimer = JUMP_BUFFER_DURATION;
+    return true;
+  }
+  state.jumpBufferTimer = 0;
   state.runner.ducking = false;
   state.runner.height = RUNNER_HEIGHT;
   state.runner.y = GROUND_Y - RUNNER_HEIGHT;
@@ -370,6 +378,7 @@ export function tickGame(
   if (state.phase !== "running") return;
   const dt = Math.min(Math.max(deltaSeconds, 0), 0.04);
   state.elapsed += dt;
+  state.jumpBufferTimer = Math.max(0, state.jumpBufferTimer - dt);
   updateEffects(state, dt);
 
   if (!state.runner.grounded) {
@@ -384,6 +393,7 @@ export function tickGame(
       state.runner.grounded = true;
     }
   }
+  if (state.runner.grounded && state.jumpBufferTimer > 0) jump(state);
 
   const baseSpeed = Math.min(MAX_SPEED, STARTING_SPEED + state.score * 0.72);
   state.speed = baseSpeed * (state.effects.speed > 0 ? SPEED_BOOST_MULTIPLIER : 1);

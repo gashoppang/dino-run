@@ -58,6 +58,39 @@ describe("game engine", () => {
     expect(state.runner.y + state.runner.height).toBe(GROUND_Y);
   });
 
+  it("buffers a jump pressed shortly before landing", () => {
+    const state = createGameState();
+    startGame(state);
+    state.runner.grounded = false;
+    state.runner.y = GROUND_Y - state.runner.height - 1;
+    state.runner.velocityY = 180;
+
+    expect(jump(state)).toBe(true);
+    expect(state.jumpBufferTimer).toBeCloseTo(0.12);
+    tickGame(state, 1 / 60, () => 0.5);
+
+    expect(state.runner.grounded).toBe(false);
+    expect(state.runner.velocityY).toBe(-810);
+    expect(state.jumpBufferTimer).toBe(0);
+  });
+
+  it("expires a buffered jump when landing is too late", () => {
+    const state = createGameState();
+    startGame(state);
+    state.runner.grounded = false;
+    state.runner.y = 100;
+    state.runner.velocityY = 0;
+    jump(state);
+
+    for (let frame = 0; frame < 4; frame += 1) tickGame(state, 0.04, () => 0.5);
+    state.runner.y = GROUND_Y - state.runner.height - 1;
+    state.runner.velocityY = 180;
+    tickGame(state, 1 / 60, () => 0.5);
+
+    expect(state.runner.grounded).toBe(true);
+    expect(state.jumpBufferTimer).toBe(0);
+  });
+
   it("changes the runner hitbox while ducking", () => {
     const state = createGameState();
     startGame(state);
