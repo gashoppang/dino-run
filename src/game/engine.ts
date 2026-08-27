@@ -46,6 +46,14 @@ export interface ItemState {
   height: number;
 }
 
+export interface DestructionEffectState {
+  id: number;
+  kind: ObstacleKind;
+  x: number;
+  y: number;
+  age: number;
+}
+
 export interface TimedEffects {
   shield: number;
   giant: number;
@@ -60,6 +68,7 @@ export interface GameState {
   runner: RunnerState;
   obstacles: ObstacleState[];
   items: ItemState[];
+  destructionEffects: DestructionEffectState[];
   effects: TimedEffects;
   collectedItems: ItemKind[];
   score: number;
@@ -89,12 +98,17 @@ const MIN_SPAWN_DELAY = 0.72;
 const ITEM_SIZE = 42;
 const ITEM_OBSTACLE_GAP = 96;
 const BLOCKED_SPAWN_RETRY = 0.65;
-const ITEM_KINDS: ItemKind[] = [
+const WEIGHTED_ITEM_KINDS: ItemKind[] = [
   "shield",
   "giant",
+  "giant",
+  "speed-self",
   "speed-self",
   "speed-rival",
+  "speed-rival",
   "super-jump",
+  "super-jump",
+  "wings",
   "wings",
 ];
 const OBSTACLE_SPECS = {
@@ -125,6 +139,7 @@ export function createGameState(bestScore = 0): GameState {
     runner: createRunner(),
     obstacles: [],
     items: [],
+    destructionEffects: [],
     effects: { shield: 0, giant: 0, speed: 0, superJump: 0, wings: 0 },
     collectedItems: [],
     score: 0,
@@ -277,9 +292,9 @@ function spawnItem(state: GameState, random: () => number): void {
     state.itemSpawnTimer = BLOCKED_SPAWN_RETRY;
     return;
   }
-  const kind = ITEM_KINDS[Math.min(
-    ITEM_KINDS.length - 1,
-    Math.floor(random() * ITEM_KINDS.length),
+  const kind = WEIGHTED_ITEM_KINDS[Math.min(
+    WEIGHTED_ITEM_KINDS.length - 1,
+    Math.floor(random() * WEIGHTED_ITEM_KINDS.length),
   )]!;
   const heightRoll = random();
   state.items.push({
@@ -389,6 +404,13 @@ export function tickGame(
     obstacle.x -= state.speed * dt;
   }
   for (const item of state.items) item.x -= state.speed * dt;
+  for (const effect of state.destructionEffects) {
+    effect.x -= state.speed * dt;
+    effect.age += dt;
+  }
+  state.destructionEffects = state.destructionEffects.filter(
+    (effect) => effect.age < 0.55,
+  );
   state.obstacles = state.obstacles.filter(
     (obstacle) => obstacle.x + obstacle.width > -30,
   );
@@ -401,6 +423,17 @@ export function tickGame(
 
   const collisions = state.obstacles.filter((obstacle) => overlapsObstacle(state, obstacle));
   if (collisions.length > 0 && (state.effects.shield > 0 || state.effects.giant > 0)) {
+    if (state.effects.giant > 0) {
+      for (const obstacle of collisions) {
+        state.destructionEffects.push({
+          id: obstacle.id,
+          kind: obstacle.kind,
+          x: obstacle.x + obstacle.width / 2,
+          y: obstacle.y + obstacle.height / 2,
+          age: 0,
+        });
+      }
+    }
     const destroyedIds = new Set(collisions.map((obstacle) => obstacle.id));
     state.obstacles = state.obstacles.filter((obstacle) => !destroyedIds.has(obstacle.id));
   } else if (collisions.length > 0) {

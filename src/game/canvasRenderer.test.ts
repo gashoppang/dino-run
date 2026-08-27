@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import { drawItem, drawObstacle, getViewportMetrics } from "./canvasRenderer";
-import type { ItemState, ObstacleState } from "./engine";
+import {
+  drawDestructionEffect,
+  drawItem,
+  drawObstacle,
+  getViewportMetrics,
+} from "./canvasRenderer";
+import type { DestructionEffectState, ItemState, ObstacleState } from "./engine";
 
 function createContextMock(): CanvasRenderingContext2D {
   return {
@@ -14,6 +19,7 @@ function createContextMock(): CanvasRenderingContext2D {
     fill: vi.fn(),
     fillRect: vi.fn(),
     fillStyle: "",
+    globalAlpha: 1,
     shadowColor: "",
     shadowBlur: 0,
     shadowOffsetX: 0,
@@ -77,6 +83,23 @@ describe("standard canvas obstacle renderer", () => {
     expect(context.save).toHaveBeenCalledOnce();
     expect(context.translate).toHaveBeenCalledOnce();
     expect(context.fill).toHaveBeenCalled();
+    expect(context.restore).toHaveBeenCalledOnce();
+  });
+
+  it("draws giant-destruction pixel fragments", () => {
+    const context = createContextMock();
+    const effect: DestructionEffectState = {
+      id: 1,
+      kind: "cactus-large",
+      x: 220,
+      y: 370,
+      age: 0.16,
+    };
+
+    drawDestructionEffect(context, effect);
+
+    expect(context.translate).toHaveBeenCalledWith(220, 370);
+    expect(context.fillRect).toHaveBeenCalledTimes(10);
     expect(context.restore).toHaveBeenCalledOnce();
   });
 });

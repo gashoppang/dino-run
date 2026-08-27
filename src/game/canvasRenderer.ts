@@ -1,6 +1,7 @@
 import {
   GROUND_Y,
   WORLD_HEIGHT,
+  type DestructionEffectState,
   type GameState,
   type ItemState,
   type ObstacleState,
@@ -292,6 +293,38 @@ export function drawItem(
   context.restore();
 }
 
+export function drawDestructionEffect(
+  context: CanvasRenderingContext2D,
+  effect: DestructionEffectState,
+): void {
+  const progress = Math.min(1, effect.age / 0.55);
+  const radius = 9 + progress * 68;
+  const gravityDrop = progress * progress * 30;
+  const directions: Array<readonly [number, number]> = [
+    [-1, -0.45], [-0.7, -1], [-0.2, -0.75], [0.35, -1.05], [0.85, -0.55],
+    [1, 0.12], [0.65, 0.72], [0.16, 0.92], [-0.48, 0.78], [-0.92, 0.3],
+  ];
+  context.save();
+  context.translate(Math.round(effect.x), Math.round(effect.y));
+  context.globalAlpha = 1 - progress;
+  context.fillStyle = effect.kind.startsWith("cactus-") ? COLORS.teal : COLORS.coralLight;
+  directions.forEach(([directionX, directionY], index) => {
+    const size = index % 3 === 0 ? 9 : index % 2 === 0 ? 6 : 4;
+    context.fillRect(
+      Math.round(directionX * radius - size / 2),
+      Math.round(directionY * radius + gravityDrop - size / 2),
+      size,
+      size,
+    );
+  });
+  if (progress < 0.25) {
+    context.fillStyle = COLORS.cream;
+    const flashSize = 22 * (1 - progress * 4);
+    context.fillRect(-flashSize / 2, -flashSize / 2, flashSize, flashSize);
+  }
+  context.restore();
+}
+
 function drawCactusPart(
   context: CanvasRenderingContext2D,
   clusterHeight: number,
@@ -400,6 +433,7 @@ export function renderGame(
   for (const item of state.items) drawItem(context, item, state.elapsed);
   drawRunner(context, state);
   for (const obstacle of state.obstacles) drawObstacle(context, obstacle, state.elapsed);
+  for (const effect of state.destructionEffects) drawDestructionEffect(context, effect);
   drawVignette(context, viewportWidth);
 }
 

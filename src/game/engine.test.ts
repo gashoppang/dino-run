@@ -181,6 +181,27 @@ describe("game engine", () => {
     expect(state.itemSpawnTimer).toBe(5.5);
   });
 
+  it("makes shields rarer than every other item", () => {
+    const counts = new Map<string, number>();
+    for (let slot = 0; slot < 11; slot += 1) {
+      const state = createGameState();
+      startGame(state);
+      state.spawnTimer = 100;
+      state.itemSpawnTimer = 0;
+      const rolls = [(slot + 0.5) / 11, 0.5, 0.5];
+      tickGame(state, 1 / 60, () => rolls.shift() ?? 0.5);
+      const kind = state.items[0]!.kind;
+      counts.set(kind, (counts.get(kind) ?? 0) + 1);
+    }
+
+    expect(counts.get("shield")).toBe(1);
+    expect(counts.get("giant")).toBe(2);
+    expect(counts.get("speed-self")).toBe(2);
+    expect(counts.get("speed-rival")).toBe(2);
+    expect(counts.get("super-jump")).toBe(2);
+    expect(counts.get("wings")).toBe(2);
+  });
+
   it("defers an item until it has a safe gap from an obstacle", () => {
     const state = createGameState();
     startGame(state);
@@ -288,6 +309,12 @@ describe("game engine", () => {
 
     expect(state.phase).toBe("running");
     expect(state.obstacles).toHaveLength(0);
+    expect(state.destructionEffects).toEqual([
+      expect.objectContaining({ kind: "cactus-small", age: 0 }),
+    ]);
+
+    for (let frame = 0; frame < 14; frame += 1) tickGame(state, 0.04, () => 0.5);
+    expect(state.destructionEffects).toHaveLength(0);
   });
 
   it("boosts speed and increases the next obstacle gap", () => {
