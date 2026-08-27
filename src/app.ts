@@ -3,6 +3,7 @@ import {
   applySpeedBoost,
   createGameState,
   formatScore,
+  GAME_VIEW_HEIGHT,
   jump,
   pauseGame,
   resetGame,
@@ -12,7 +13,6 @@ import {
   startGame,
   takeCollectedItems,
   tickGame,
-  WORLD_HEIGHT,
   type GameState,
   type ItemKind,
 } from "./game/engine";
@@ -416,7 +416,7 @@ function mountGame(): () => void {
       }
       setViewportWidth(
         player.state,
-        WORLD_HEIGHT * (entry.contentRect.width / Math.max(1, entry.contentRect.height)),
+        GAME_VIEW_HEIGHT * (entry.contentRect.width / Math.max(1, entry.contentRect.height)),
       );
       player.render(player.state);
     });
