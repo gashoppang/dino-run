@@ -1,5 +1,5 @@
 export const WORLD_WIDTH = 960;
-export const WORLD_HEIGHT = 540;
+export const WORLD_HEIGHT = 480;
 export const GROUND_Y = 420;
 
 export type GamePhase = "ready" | "running" | "paused" | "gameOver";

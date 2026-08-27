@@ -12,6 +12,7 @@ import {
   startGame,
   takeCollectedItems,
   tickGame,
+  WORLD_HEIGHT,
   type GameState,
   type ItemKind,
 } from "./game/engine";
@@ -415,7 +416,7 @@ function mountGame(): () => void {
       }
       setViewportWidth(
         player.state,
-        540 * (entry.contentRect.width / Math.max(1, entry.contentRect.height)),
+        WORLD_HEIGHT * (entry.contentRect.width / Math.max(1, entry.contentRect.height)),
       );
       player.render(player.state);
     });
