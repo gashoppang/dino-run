@@ -1,5 +1,6 @@
 import {
   GROUND_Y,
+  GAME_CAMERA_TOP,
   GAME_VIEW_HEIGHT,
   WORLD_HEIGHT,
   type DestructionEffectState,
@@ -398,10 +399,9 @@ export function renderGame(
   state: GameState,
 ): void {
   const { scale, viewportWidth } = getViewportMetrics(canvas.width, canvas.height);
-  const cameraTop = (WORLD_HEIGHT - GAME_VIEW_HEIGHT) * (GROUND_Y / WORLD_HEIGHT);
   context.setTransform(1, 0, 0, 1, 0, 0);
   context.clearRect(0, 0, canvas.width, canvas.height);
-  context.setTransform(scale, 0, 0, scale, 0, -cameraTop * scale);
+  context.setTransform(scale, 0, 0, scale, 0, -GAME_CAMERA_TOP * scale);
   context.imageSmoothingEnabled = false;
 
   drawSky(context, state, viewportWidth);

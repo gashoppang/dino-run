@@ -29,7 +29,7 @@ function createContextMock(): CanvasRenderingContext2D {
 
 describe("standard canvas obstacle renderer", () => {
   it("keeps one uniform scale and expands a wide split-screen viewport", () => {
-    const metrics = getViewportMetrics(1920, 430);
+    const metrics = getViewportMetrics(1920, 400);
 
     expect(metrics.scale).toBe(1);
     expect(metrics.viewportWidth).toBe(1920);

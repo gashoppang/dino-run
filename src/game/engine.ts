@@ -1,6 +1,7 @@
 export const WORLD_WIDTH = 960;
 export const WORLD_HEIGHT = 480;
-export const GAME_VIEW_HEIGHT = 430;
+export const GAME_VIEW_HEIGHT = 400;
+export const GAME_CAMERA_TOP = 60;
 export const GROUND_Y = 420;
 
 export type GamePhase = "ready" | "running" | "paused" | "gameOver";
@@ -386,7 +387,7 @@ export function tickGame(
     const gravity = state.effects.wings > 0 ? 760 : GRAVITY;
     state.runner.velocityY += gravity * dt;
     state.runner.y += state.runner.velocityY * dt;
-    state.runner.y = Math.max(46, state.runner.y);
+    state.runner.y = Math.max(GAME_CAMERA_TOP + 2, state.runner.y);
     const floorY = GROUND_Y - RUNNER_HEIGHT;
     if (state.runner.y >= floorY) {
       state.runner.y = floorY;
