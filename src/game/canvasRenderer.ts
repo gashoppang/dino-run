@@ -147,101 +147,135 @@ function drawDust(context: CanvasRenderingContext2D, state: GameState): void {
 }
 
 function drawStandingDino(context: CanvasRenderingContext2D, frame: number): void {
-  polygon(context, [
-    [0, 34], [10, 32], [20, 27], [29, 31], [27, 42], [17, 46], [7, 42], [0, 39],
-  ], COLORS.ink);
-  polygon(context, [
-    [13, 30], [27, 25], [39, 29], [47, 39], [45, 53], [37, 61], [22, 62],
-    [11, 55], [7, 43],
-  ], COLORS.ink);
-  polygon(context, [
-    [29, 29], [34, 11], [45, 8], [52, 19], [49, 38], [40, 45], [31, 38],
-  ], COLORS.ink);
-  polygon(context, [
-    [35, 5], [41, 1], [59, 1], [66, 6], [68, 11], [68, 21], [63, 25],
-    [48, 25], [46, 30], [35, 29], [32, 21],
-  ], COLORS.ink);
-  context.fillStyle = COLORS.ink;
-  context.fillRect(47, 22, 21, 9);
-
-  context.fillStyle = COLORS.tealDark;
-  context.fillRect(18, 37, 16, 6);
-  context.fillRect(24, 45, 14, 5);
-  context.fillRect(36, 16, 7, 12);
-  context.fillRect(40, 6, 8, 4);
-
-  context.fillStyle = COLORS.ink;
-  context.fillRect(40, 36, 15, 5);
-  context.fillRect(51, 40, 7, 4);
-  context.fillRect(54, 44, 4, 3);
-  context.fillRect(49, 44, 3, 3);
-
   if (frame === 0) {
-    context.fillRect(19, 56, 13, 20);
-    context.fillRect(17, 75, 20, 7);
-    context.fillRect(37, 58, 11, 14);
-    context.fillRect(40, 69, 8, 9);
-    context.fillRect(39, 77, 17, 5);
+    context.fillStyle = COLORS.ink;
+    context.fillRect(18, 55, 15, 22);
+    context.fillRect(15, 74, 22, 8);
+    context.fillRect(37, 58, 13, 18);
+    context.fillRect(37, 74, 19, 8);
+    context.fillStyle = COLORS.teal;
+    context.fillRect(22, 57, 7, 17);
+    context.fillRect(41, 60, 6, 13);
   } else {
-    context.fillRect(21, 58, 11, 14);
-    context.fillRect(20, 69, 8, 9);
-    context.fillRect(14, 77, 17, 5);
-    context.fillRect(36, 56, 13, 20);
-    context.fillRect(35, 75, 20, 7);
+    context.fillStyle = COLORS.ink;
+    context.fillRect(19, 58, 13, 18);
+    context.fillRect(13, 74, 19, 8);
+    context.fillRect(36, 55, 15, 22);
+    context.fillRect(34, 74, 22, 8);
+    context.fillStyle = COLORS.teal;
+    context.fillRect(22, 60, 6, 13);
+    context.fillRect(40, 57, 7, 17);
   }
 
-  context.fillStyle = COLORS.cream;
-  context.fillRect(53, 8, 6, 6);
-  context.fillRect(63, 15, 3, 3);
-  context.fillRect(52, 22, 16, 2);
-  context.fillRect(54, 24, 3, 4);
-  context.fillRect(62, 24, 3, 4);
+  polygon(context, [
+    [0, 35], [9, 33], [18, 28], [27, 31], [26, 42], [17, 48], [7, 44], [0, 40],
+  ], COLORS.ink);
+  polygon(context, [
+    [5, 37], [12, 35], [20, 31], [22, 34], [21, 39], [14, 43], [7, 41],
+  ], COLORS.teal);
+  polygon(context, [
+    [12, 31], [27, 25], [40, 29], [49, 40], [47, 54], [39, 63], [23, 66],
+    [11, 58], [7, 44],
+  ], COLORS.ink);
+  polygon(context, [
+    [16, 34], [28, 29], [37, 32], [44, 41], [42, 52], [35, 59], [24, 61],
+    [16, 55], [12, 44],
+  ], COLORS.teal);
+  polygon(context, [
+    [29, 31], [33, 14], [46, 10], [53, 20], [50, 38], [42, 46], [32, 40],
+  ], COLORS.ink);
+  polygon(context, [
+    [34, 31], [37, 17], [44, 15], [48, 21], [46, 35], [41, 40], [35, 37],
+  ], COLORS.teal);
+  polygon(context, [
+    [35, 5], [41, 1], [59, 1], [66, 6], [68, 12], [68, 24], [63, 30],
+    [48, 30], [45, 34], [35, 31], [31, 22],
+  ], COLORS.ink);
+  polygon(context, [
+    [40, 6], [57, 5], [62, 8], [64, 13], [64, 21], [60, 25], [47, 25],
+    [43, 29], [38, 27], [36, 20],
+  ], COLORS.teal);
+
+  polygon(context, [
+    [20, 43], [27, 39], [35, 42], [39, 49], [36, 57], [29, 61], [22, 57],
+  ], "rgba(255, 231, 181, 0.78)");
   context.fillStyle = COLORS.ink;
-  context.fillRect(56, 10, 3, 3);
+  context.fillRect(39, 37, 14, 5);
+  context.fillRect(50, 41, 7, 4);
+  context.fillRect(53, 45, 4, 3);
+
+  context.fillStyle = COLORS.cream;
+  context.fillRect(50, 8, 9, 9);
+  context.fillStyle = COLORS.ink;
+  context.fillRect(54, 11, 4, 5);
+  context.fillStyle = "#ffffff";
+  context.fillRect(53, 9, 2, 2);
+  context.fillStyle = COLORS.ink;
+  context.fillRect(62, 18, 2, 2);
+  context.fillRect(52, 23, 12, 2);
+  context.fillStyle = COLORS.cream;
+  context.fillRect(58, 25, 3, 4);
+  context.fillStyle = COLORS.coral;
+  context.fillRect(46, 19, 6, 4);
 }
 
 function drawDuckingDino(context: CanvasRenderingContext2D, frame: number): void {
-  polygon(context, [
-    [0, 18], [11, 16], [20, 12], [29, 15], [27, 27], [17, 32], [7, 28], [0, 24],
-  ], COLORS.ink);
-  polygon(context, [
-    [11, 16], [26, 10], [42, 13], [49, 22], [44, 34], [29, 38], [14, 34], [7, 27],
-  ], COLORS.ink);
-  polygon(context, [
-    [33, 8], [42, 3], [59, 3], [66, 7], [68, 12], [68, 21], [62, 25],
-    [48, 25], [45, 30], [34, 28], [31, 18],
-  ], COLORS.ink);
-  context.fillStyle = COLORS.ink;
-  context.fillRect(47, 22, 21, 8);
-
-  context.fillStyle = COLORS.tealDark;
-  context.fillRect(17, 19, 17, 6);
-  context.fillRect(34, 12, 8, 9);
-  context.fillRect(42, 7, 7, 4);
-
-  context.fillStyle = COLORS.ink;
-  context.fillRect(37, 29, 14, 4);
-  context.fillRect(48, 32, 7, 4);
   if (frame === 0) {
-    context.fillRect(16, 33, 12, 10);
-    context.fillRect(13, 41, 19, 7);
-    context.fillRect(35, 34, 10, 8);
-    context.fillRect(35, 41, 16, 7);
+    context.fillStyle = COLORS.ink;
+    context.fillRect(14, 31, 14, 11);
+    context.fillRect(11, 40, 20, 8);
+    context.fillRect(35, 33, 12, 9);
+    context.fillRect(34, 40, 18, 8);
   } else {
-    context.fillRect(18, 34, 10, 8);
-    context.fillRect(12, 41, 16, 7);
-    context.fillRect(34, 33, 12, 10);
-    context.fillRect(32, 41, 19, 7);
+    context.fillStyle = COLORS.ink;
+    context.fillRect(16, 33, 12, 9);
+    context.fillRect(10, 40, 18, 8);
+    context.fillRect(33, 31, 14, 11);
+    context.fillRect(31, 40, 20, 8);
   }
 
-  context.fillStyle = COLORS.cream;
-  context.fillRect(53, 9, 6, 6);
-  context.fillRect(63, 16, 3, 3);
-  context.fillRect(52, 22, 16, 2);
-  context.fillRect(55, 24, 3, 4);
-  context.fillRect(62, 24, 3, 4);
+  polygon(context, [
+    [0, 18], [10, 16], [19, 12], [28, 15], [26, 27], [17, 33], [7, 29], [0, 24],
+  ], COLORS.ink);
+  polygon(context, [
+    [5, 20], [13, 18], [21, 15], [23, 18], [21, 24], [14, 28], [7, 26],
+  ], COLORS.teal);
+  polygon(context, [
+    [10, 16], [25, 10], [42, 13], [50, 23], [46, 36], [35, 41], [19, 40],
+    [9, 34], [6, 26],
+  ], COLORS.ink);
+  polygon(context, [
+    [15, 19], [26, 14], [39, 17], [45, 24], [42, 32], [34, 36], [21, 36],
+    [14, 31], [11, 25],
+  ], COLORS.teal);
+  polygon(context, [
+    [33, 7], [41, 2], [59, 2], [66, 7], [68, 12], [68, 23], [62, 29],
+    [48, 29], [44, 33], [34, 29], [30, 19],
+  ], COLORS.ink);
+  polygon(context, [
+    [39, 7], [57, 6], [62, 9], [64, 13], [64, 21], [60, 24], [47, 24],
+    [42, 28], [37, 26], [35, 18],
+  ], COLORS.teal);
+  polygon(context, [
+    [20, 23], [28, 19], [37, 22], [41, 29], [36, 36], [26, 37], [20, 33],
+  ], "rgba(255, 231, 181, 0.78)");
+
   context.fillStyle = COLORS.ink;
-  context.fillRect(56, 11, 3, 3);
+  context.fillRect(37, 29, 13, 4);
+  context.fillRect(47, 32, 7, 4);
+  context.fillStyle = COLORS.cream;
+  context.fillRect(50, 9, 9, 9);
+  context.fillStyle = COLORS.ink;
+  context.fillRect(54, 12, 4, 5);
+  context.fillStyle = "#ffffff";
+  context.fillRect(53, 10, 2, 2);
+  context.fillStyle = COLORS.ink;
+  context.fillRect(62, 18, 2, 2);
+  context.fillRect(52, 22, 12, 2);
+  context.fillStyle = COLORS.cream;
+  context.fillRect(58, 24, 3, 4);
+  context.fillStyle = COLORS.coral;
+  context.fillRect(46, 19, 6, 4);
 }
 
 function drawRunner(context: CanvasRenderingContext2D, state: GameState): void {
