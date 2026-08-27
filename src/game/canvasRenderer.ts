@@ -279,33 +279,36 @@ export function drawItem(
     polygon(context, [[21, 7], [34, 12], [32, 27], [27, 34], [21, 38], [15, 34], [10, 27], [8, 12]], iconColor);
     polygon(context, [[21, 12], [29, 15], [27, 26], [21, 32]], highlight);
   } else if (item.kind === "giant") {
-    context.fillRect(18, 18, 7, 7);
-    polygon(context, [[17, 17], [8, 8], [8, 14], [4, 14], [4, 4], [14, 4], [14, 8]], iconColor);
-    polygon(context, [[25, 17], [34, 8], [34, 14], [38, 14], [38, 4], [28, 4], [28, 8]], iconColor);
-    polygon(context, [[17, 25], [8, 34], [8, 28], [4, 28], [4, 38], [14, 38], [14, 34]], iconColor);
-    polygon(context, [[25, 25], [34, 34], [34, 28], [38, 28], [38, 38], [28, 38], [28, 34]], iconColor);
-  } else if (item.kind === "speed-self") {
-    polygon(context, [[7, 10], [18, 21], [7, 32], [13, 32], [24, 21], [13, 10]], iconColor);
-    polygon(context, [[19, 10], [30, 21], [19, 32], [25, 32], [36, 21], [25, 10]], iconColor);
+    polygon(context, [
+      [21, 6], [29, 8], [35, 14], [36, 21], [32, 27], [10, 27], [6, 21],
+      [7, 14], [13, 8],
+    ], iconColor);
+    context.fillRect(13, 24, 16, 12);
     context.fillStyle = highlight;
-    context.fillRect(7, 19, 25, 4);
-  } else if (item.kind === "speed-rival") {
-    context.fillRect(18, 18, 7, 7);
-    context.fillRect(19, 5, 5, 10);
-    context.fillRect(19, 28, 5, 10);
-    context.fillRect(5, 19, 10, 5);
-    context.fillRect(28, 19, 10, 5);
-    context.fillRect(11, 11, 5, 3);
-    context.fillRect(27, 11, 5, 3);
-    context.fillRect(11, 29, 5, 3);
-    context.fillRect(27, 29, 5, 3);
+    context.fillRect(11, 14, 6, 6);
+    context.fillRect(25, 11, 6, 6);
+    context.fillRect(17, 26, 8, 8);
+    context.fillStyle = iconColor;
+    context.fillRect(18, 28, 2, 4);
+    context.fillRect(23, 28, 2, 4);
+  } else if (item.kind === "speed-self" || item.kind === "speed-rival") {
+    polygon(context, [[5, 10], [11, 10], [22, 21], [11, 32], [5, 32], [16, 21]], iconColor);
+    polygon(context, [[18, 10], [24, 10], [35, 21], [24, 32], [18, 32], [29, 21]], iconColor);
   } else {
-    context.fillRect(19, 17, 5, 18);
-    polygon(context, [[19, 19], [9, 7], [4, 10], [9, 17], [3, 16], [8, 24], [4, 25], [13, 34], [19, 31]], iconColor);
-    polygon(context, [[24, 19], [34, 7], [39, 10], [34, 17], [40, 16], [35, 24], [39, 25], [30, 34], [24, 31]], iconColor);
+    context.fillRect(19, 14, 4, 23);
+    polygon(context, [
+      [19, 16], [14, 11], [7, 7], [3, 10], [5, 17], [10, 21], [4, 20],
+      [7, 27], [13, 30], [8, 30], [14, 36], [20, 31],
+    ], iconColor);
+    polygon(context, [
+      [23, 16], [28, 11], [35, 7], [39, 10], [37, 17], [32, 21], [38, 20],
+      [35, 27], [29, 30], [34, 30], [28, 36], [22, 31],
+    ], iconColor);
     context.fillStyle = highlight;
-    context.fillRect(8, 13, 7, 3);
-    context.fillRect(28, 13, 7, 3);
+    context.fillRect(7, 14, 9, 3);
+    context.fillRect(10, 21, 7, 3);
+    context.fillRect(26, 14, 9, 3);
+    context.fillRect(25, 21, 7, 3);
   }
   context.restore();
 }
