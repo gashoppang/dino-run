@@ -149,6 +149,8 @@ function drawDust(context: CanvasRenderingContext2D, state: GameState): void {
 function drawRunner(context: CanvasRenderingContext2D, state: GameState): void {
   const runner = state.runner;
   const frame = Math.floor(state.elapsed * 11) % 2;
+  const artWidth = 68;
+  const artHeight = runner.ducking ? 48 : 82;
   context.save();
   context.translate(Math.round(runner.x), Math.round(runner.y));
   if (state.effects.giant > 0) {
@@ -156,6 +158,7 @@ function drawRunner(context: CanvasRenderingContext2D, state: GameState): void {
     context.scale(1.38, 1.38);
     context.translate(-runner.width / 2, -runner.height);
   }
+  context.scale(runner.width / artWidth, runner.height / artHeight);
 
   if (state.effects.speed > 0) {
     context.fillStyle = "rgba(83, 194, 255, 0.24)";
@@ -202,7 +205,7 @@ function drawRunner(context: CanvasRenderingContext2D, state: GameState): void {
 
   if (state.effects.shield > 0) {
     context.beginPath();
-    context.arc(runner.width / 2, runner.height / 2, 54, 0, Math.PI * 2);
+    context.arc(artWidth / 2, artHeight / 2, 54, 0, Math.PI * 2);
     context.fillStyle = "rgba(91, 225, 226, 0.12)";
     context.fill();
     context.strokeStyle = "rgba(144, 255, 243, 0.86)";
@@ -226,12 +229,14 @@ export function drawItem(
   elapsed: number,
 ): void {
   const bob = Math.sin(elapsed * 5 + item.id) * 6;
-  const center = item.width / 2;
+  const artSize = 42;
+  const center = artSize / 2;
   context.save();
   context.translate(Math.round(item.x), Math.round(item.y + bob));
+  context.scale(item.width / artSize, item.height / artSize);
   context.fillStyle = "rgba(11, 29, 37, 0.45)";
-  context.fillRect(4, 7, item.width, item.height);
-  polygon(context, [[center, 0], [item.width, center], [center, item.height], [0, center]], ITEM_COLORS[item.kind]);
+  context.fillRect(4, 7, artSize, artSize);
+  polygon(context, [[center, 0], [artSize, center], [center, artSize], [0, center]], ITEM_COLORS[item.kind]);
   const iconColor = "rgba(18, 43, 52, 0.94)";
   const highlight = "rgba(255, 248, 218, 0.7)";
   context.fillStyle = iconColor;
@@ -328,8 +333,18 @@ export function drawObstacle(
   elapsed: number,
 ): void {
   const { x, y, width, height } = obstacle;
+  const artSize = obstacle.kind.startsWith("bird-")
+    ? { width: 78, height: 42 }
+    : obstacle.kind === "cactus-small"
+      ? { width: 34, height: 50 }
+      : obstacle.kind === "cactus-large"
+        ? { width: 48, height: 82 }
+        : obstacle.kind === "cactus-double"
+          ? { width: 72, height: 62 }
+          : { width: 104, height: 64 };
   context.save();
   context.translate(Math.round(x), Math.round(y));
+  context.scale(width / artSize.width, height / artSize.height);
   context.shadowColor = "rgba(12, 30, 35, 0.34)";
   context.shadowBlur = 0;
   context.shadowOffsetX = 5;
@@ -337,30 +352,30 @@ export function drawObstacle(
 
   if (obstacle.kind.startsWith("cactus-")) {
     if (obstacle.kind === "cactus-double") {
-      drawCactusPart(context, height, 0, 34, 56);
-      drawCactusPart(context, height, 38, 34, 62);
+      drawCactusPart(context, artSize.height, 0, 34, 56);
+      drawCactusPart(context, artSize.height, 38, 34, 62);
     } else if (obstacle.kind === "cactus-triple") {
-      drawCactusPart(context, height, 0, 32, 54);
-      drawCactusPart(context, height, 36, 32, 64);
-      drawCactusPart(context, height, 72, 32, 50);
+      drawCactusPart(context, artSize.height, 0, 32, 54);
+      drawCactusPart(context, artSize.height, 36, 32, 64);
+      drawCactusPart(context, artSize.height, 72, 32, 50);
     } else {
-      drawCactusPart(context, height, 0, width, height);
+      drawCactusPart(context, artSize.height, 0, artSize.width, artSize.height);
     }
   } else {
     const wingDown = Math.floor(elapsed * 9) % 2 === 1;
     context.fillStyle = COLORS.coralLight;
-    context.fillRect(width * 0.24, height * 0.34, width * 0.46, height * 0.38);
-    context.fillRect(width * 0.65, height * 0.24, width * 0.24, height * 0.3);
-    context.fillRect(width * 0.86, height * 0.34, width * 0.14, height * 0.1);
-    context.fillRect(width * 0.08, height * 0.54, width * 0.26, height * 0.12);
+    context.fillRect(artSize.width * 0.24, artSize.height * 0.34, artSize.width * 0.46, artSize.height * 0.38);
+    context.fillRect(artSize.width * 0.65, artSize.height * 0.24, artSize.width * 0.24, artSize.height * 0.3);
+    context.fillRect(artSize.width * 0.86, artSize.height * 0.34, artSize.width * 0.14, artSize.height * 0.1);
+    context.fillRect(artSize.width * 0.08, artSize.height * 0.54, artSize.width * 0.26, artSize.height * 0.12);
     context.fillRect(
-      width * 0.28,
-      wingDown ? height * 0.58 : 0,
-      width * 0.38,
-      height * 0.26,
+      artSize.width * 0.28,
+      wingDown ? artSize.height * 0.58 : 0,
+      artSize.width * 0.38,
+      artSize.height * 0.26,
     );
     context.fillStyle = COLORS.ink;
-    context.fillRect(width * 0.78, height * 0.3, 4, 4);
+    context.fillRect(artSize.width * 0.78, artSize.height * 0.3, 4, 4);
   }
   context.restore();
 }

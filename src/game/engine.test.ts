@@ -21,6 +21,7 @@ describe("game engine", () => {
     expect(state.phase).toBe("running");
     expect(state.bestScore).toBe(321);
     expect(state.score).toBe(0);
+    expect(state.runner).toEqual(expect.objectContaining({ width: 80, height: 97 }));
   });
 
   it("resets a finished round to the ready state", () => {
@@ -108,9 +109,9 @@ describe("game engine", () => {
       id: 1,
       kind: "bird-low" as const,
       x: 143,
-      y: GROUND_Y - 80,
-      width: 78,
-      height: 42,
+      y: GROUND_Y - 96,
+      width: 92,
+      height: 50,
     });
     const standingState = createGameState();
     startGame(standingState);
@@ -142,10 +143,10 @@ describe("game engine", () => {
   });
 
   it.each([
-    ["cactus-small", 0.01, 34, 50],
-    ["cactus-large", 0.26, 48, 82],
-    ["cactus-double", 0.51, 72, 62],
-    ["cactus-triple", 0.76, 104, 64],
+    ["cactus-small", 0.01, 40, 59],
+    ["cactus-large", 0.26, 57, 97],
+    ["cactus-double", 0.51, 85, 73],
+    ["cactus-triple", 0.76, 123, 76],
   ] as const)("spawns the %s obstacle", (expectedKind, cactusRoll, width, height) => {
     const state = createGameState();
     startGame(state);
@@ -159,8 +160,8 @@ describe("game engine", () => {
   });
 
   it.each([
-    ["bird-high", 0.1, GROUND_Y - 132],
-    ["bird-low", 0.9, GROUND_Y - 80],
+    ["bird-high", 0.1, GROUND_Y - 136],
+    ["bird-low", 0.9, GROUND_Y - 96],
   ] as const)("spawns the %s obstacle at its own altitude", (expectedKind, heightRoll, expectedY) => {
     const state = createGameState();
     startGame(state);
@@ -244,6 +245,7 @@ describe("game engine", () => {
     tickGame(state, 1 / 60, () => 0.5);
 
     expect(state.items).toHaveLength(1);
+    expect(state.items[0]).toEqual(expect.objectContaining({ width: 50, height: 50 }));
     expect(state.itemSpawnTimer).toBe(5.5);
   });
 

@@ -85,9 +85,9 @@ export interface GameState {
 }
 
 const RUNNER_X = 128;
-const RUNNER_WIDTH = 68;
-const RUNNER_HEIGHT = 82;
-const DUCK_HEIGHT = 48;
+const RUNNER_WIDTH = 80;
+const RUNNER_HEIGHT = 97;
+const DUCK_HEIGHT = 57;
 const GRAVITY = 2250;
 const JUMP_VELOCITY = -810;
 const WING_FLAP_VELOCITY = -470;
@@ -96,7 +96,7 @@ const STARTING_SPEED = 340;
 const MAX_SPEED = 720;
 const SPEED_BOOST_MULTIPLIER = 1.28;
 const MIN_SPAWN_DELAY = 1.2;
-const ITEM_SIZE = 42;
+const ITEM_SIZE = 50;
 const ITEM_OBSTACLE_GAP = 96;
 const BLOCKED_SPAWN_RETRY = 0.65;
 const WEIGHTED_ITEM_KINDS: ItemKind[] = [
@@ -117,12 +117,12 @@ const WEIGHTED_ITEM_KINDS: ItemKind[] = [
   "wings",
 ];
 const OBSTACLE_SPECS = {
-  "cactus-small": { width: 34, height: 50, y: GROUND_Y - 50 },
-  "cactus-large": { width: 48, height: 82, y: GROUND_Y - 82 },
-  "cactus-double": { width: 72, height: 62, y: GROUND_Y - 62 },
-  "cactus-triple": { width: 104, height: 64, y: GROUND_Y - 64 },
-  "bird-high": { width: 78, height: 42, y: GROUND_Y - 132 },
-  "bird-low": { width: 78, height: 42, y: GROUND_Y - 80 },
+  "cactus-small": { width: 40, height: 59, y: GROUND_Y - 59 },
+  "cactus-large": { width: 57, height: 97, y: GROUND_Y - 97 },
+  "cactus-double": { width: 85, height: 73, y: GROUND_Y - 73 },
+  "cactus-triple": { width: 123, height: 76, y: GROUND_Y - 76 },
+  "bird-high": { width: 92, height: 50, y: GROUND_Y - 136 },
+  "bird-low": { width: 92, height: 50, y: GROUND_Y - 96 },
 } satisfies Record<ObstacleKind, { width: number; height: number; y: number }>;
 
 function createRunner(): RunnerState {
@@ -263,7 +263,7 @@ function isHorizontallyNear(
 
 function spawnObstacle(state: GameState, random: () => number): void {
   const spawnX = state.viewportWidth + 48;
-  if (state.items.some((item) => isHorizontallyNear(spawnX, 104, item))) {
+  if (state.items.some((item) => isHorizontallyNear(spawnX, 123, item))) {
     state.spawnTimer = BLOCKED_SPAWN_RETRY;
     return;
   }
@@ -311,7 +311,7 @@ function spawnItem(state: GameState, random: () => number): void {
     id: state.nextItemId++,
     kind,
     x: spawnX,
-    y: GROUND_Y - (heightRoll < 0.58 ? 88 : 142),
+    y: GROUND_Y - (heightRoll < 0.58 ? 92 : 146),
     width: ITEM_SIZE,
     height: ITEM_SIZE,
   });
@@ -319,9 +319,9 @@ function spawnItem(state: GameState, random: () => number): void {
 }
 
 function overlaps(a: RunnerState, b: ObstacleState): boolean {
-  const runnerInsetX = a.ducking ? 10 : 13;
-  const runnerInsetTop = a.ducking ? 7 : 10;
-  const obstacleInset = b.kind.startsWith("bird-") ? 9 : 5;
+  const runnerInsetX = a.ducking ? 12 : 15;
+  const runnerInsetTop = a.ducking ? 8 : 12;
+  const obstacleInset = b.kind.startsWith("bird-") ? 11 : 6;
   return (
     a.x + runnerInsetX < b.x + b.width - obstacleInset &&
     a.x + a.width - runnerInsetX > b.x + obstacleInset &&
@@ -345,10 +345,10 @@ function overlapsObstacle(state: GameState, obstacle: ObstacleState): boolean {
 
 function overlapsItem(runner: RunnerState, item: ItemState): boolean {
   return (
-    runner.x + 8 < item.x + item.width - 4 &&
-    runner.x + runner.width - 8 > item.x + 4 &&
-    runner.y + 5 < item.y + item.height - 4 &&
-    runner.y + runner.height - 2 > item.y + 4
+    runner.x + 9 < item.x + item.width - 5 &&
+    runner.x + runner.width - 9 > item.x + 5 &&
+    runner.y + 6 < item.y + item.height - 5 &&
+    runner.y + runner.height - 3 > item.y + 5
   );
 }
 

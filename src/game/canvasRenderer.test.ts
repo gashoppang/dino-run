@@ -18,6 +18,7 @@ function createContextMock(): CanvasRenderingContext2D {
     closePath: vi.fn(),
     fill: vi.fn(),
     fillRect: vi.fn(),
+    scale: vi.fn(),
     fillStyle: "",
     globalAlpha: 1,
     shadowColor: "",
@@ -50,13 +51,23 @@ describe("standard canvas obstacle renderer", () => {
       x: 600,
       y: kind.startsWith("bird-") ? 340 : 350,
       width: kind.startsWith("bird-")
-        ? 78
+        ? 92
         : kind === "cactus-triple"
-          ? 104
+          ? 123
           : kind === "cactus-double"
-            ? 72
-            : 48,
-      height: kind.startsWith("bird-") ? 42 : kind === "cactus-large" ? 82 : 64,
+            ? 85
+            : kind === "cactus-large"
+              ? 57
+              : 40,
+      height: kind.startsWith("bird-")
+        ? 50
+        : kind === "cactus-large"
+          ? 97
+          : kind === "cactus-small"
+            ? 59
+            : kind === "cactus-double"
+              ? 73
+              : 76,
     };
 
     drawObstacle(context, obstacle, 0.2);
@@ -75,7 +86,7 @@ describe("standard canvas obstacle renderer", () => {
     "wings",
   ] as const)("draws a visible %s pickup", (kind) => {
     const context = createContextMock();
-    const item: ItemState = { id: 1, kind, x: 640, y: 300, width: 42, height: 42 };
+    const item: ItemState = { id: 1, kind, x: 640, y: 300, width: 50, height: 50 };
 
     drawItem(context, item, 0.2);
 
