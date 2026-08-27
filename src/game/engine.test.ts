@@ -214,21 +214,21 @@ describe("game engine", () => {
     expect(state.itemSpawnTimer).toBe(5.5);
   });
 
-  it("makes shields rarer than every other item", () => {
+  it("makes giant the most common item and shield the rarest", () => {
     const counts = new Map<string, number>();
-    for (let slot = 0; slot < 13; slot += 1) {
+    for (let slot = 0; slot < 15; slot += 1) {
       const state = createGameState();
       startGame(state);
       state.spawnTimer = 100;
       state.itemSpawnTimer = 0;
-      const rolls = [(slot + 0.5) / 13, 0.5, 0.5];
+      const rolls = [(slot + 0.5) / 15, 0.5, 0.5];
       tickGame(state, 1 / 60, () => rolls.shift() ?? 0.5);
       const kind = state.items[0]!.kind;
       counts.set(kind, (counts.get(kind) ?? 0) + 1);
     }
 
     expect(counts.get("shield")).toBe(1);
-    expect(counts.get("giant")).toBe(3);
+    expect(counts.get("giant")).toBe(5);
     expect(counts.get("speed-self")).toBe(3);
     expect(counts.get("speed-rival")).toBe(3);
     expect(counts.get("wings")).toBe(3);

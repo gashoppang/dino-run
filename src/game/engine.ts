@@ -100,6 +100,8 @@ const WEIGHTED_ITEM_KINDS: ItemKind[] = [
   "giant",
   "giant",
   "giant",
+  "giant",
+  "giant",
   "speed-self",
   "speed-self",
   "speed-self",
