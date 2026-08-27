@@ -1,6 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
-  LEADERBOARD_KEY,
+  LEGACY_LEADERBOARD_KEY,
+  clearLegacyLeaderboard,
+  fetchLeaderboard,
   getBestScoreForStudent,
   getStudentLeaderboard,
   normalizeName,
@@ -9,81 +11,67 @@ import {
   recordLeaderboardScore,
 } from "./leaderboard";
 
-function createStorage(): Storage {
-  const values = new Map<string, string>();
-  return {
-    get length() { return values.size; },
-    clear: () => values.clear(),
-    getItem: (key) => values.get(key) ?? null,
-    key: (index) => [...values.keys()][index] ?? null,
-    removeItem: (key) => { values.delete(key); },
-    setItem: (key, value) => { values.set(key, value); },
-  };
-}
+const entries = [
+  { id: "1", studentId: "202402", name: "느린공룡", score: 20, createdAt: 2 },
+  { id: "2", studentId: "202401", name: "빠른공룡", score: 80, createdAt: 3 },
+];
 
-describe("leaderboard storage", () => {
+afterEach(() => vi.unstubAllGlobals());
+
+describe("leaderboard", () => {
   it("normalizes student IDs and names", () => {
     expect(normalizeStudentId("  20  2401  ")).toBe("202401");
     expect(normalizeName("  홍   길동  ")).toBe("홍 길동");
     expect(Array.from(normalizeName("123456789012345")).length).toBe(12);
   });
 
-  it("records student scores in descending order", () => {
-    const storage = createStorage();
-    recordLeaderboardScore(
-      { studentId: "202402", name: "느린공룡", player: "1p", score: 20 },
-      storage,
-      2,
-    );
-    const entries = recordLeaderboardScore(
-      { studentId: "202401", name: "빠른공룡", player: "2p", score: 80 },
-      storage,
-      3,
-    );
-
-    expect(entries.map(({ studentId, name, score }) => ({ studentId, name, score }))).toEqual([
-      { studentId: "202401", name: "빠른공룡", score: 80 },
-      { studentId: "202402", name: "느린공룡", score: 20 },
-    ]);
-    expect(parseLeaderboard(storage.getItem(LEADERBOARD_KEY))).toHaveLength(2);
+  it("normalizes and sorts API records", () => {
+    expect(parseLeaderboard(entries).map(({ studentId, score }) => ({ studentId, score })))
+      .toEqual([
+        { studentId: "202401", score: 80 },
+        { studentId: "202402", score: 20 },
+      ]);
+    expect(parseLeaderboard([{ name: "공룡" }])).toEqual([]);
   });
 
-  it("ignores corrupt stored records", () => {
-    expect(parseLeaderboard("not-json")).toEqual([]);
-    expect(parseLeaderboard('[{"name":"공룡"}]')).toEqual([]);
+  it("keeps one personal best per student ID", () => {
+    const duplicated = [
+      ...entries,
+      { id: "3", studentId: "202401", name: "빠른공룡", score: 90, createdAt: 4 },
+    ];
+    expect(getBestScoreForStudent(duplicated, "202401")).toBe(90);
+    expect(getStudentLeaderboard(duplicated)).toHaveLength(2);
+    expect(getStudentLeaderboard(duplicated)[0]?.score).toBe(90);
   });
 
-  it("shares one personal best across 1P and 2P for the same student ID", () => {
-    const storage = createStorage();
-    recordLeaderboardScore(
-      { studentId: "202401", name: "홍길동", player: "1p", score: 40 },
-      storage,
-      1,
-    );
-    const entries = recordLeaderboardScore(
-      { studentId: "202401", name: "홍길동", player: "2p", score: 90 },
-      storage,
-      2,
-    );
-
-    expect(getBestScoreForStudent(entries, "202401")).toBe(90);
-    expect(getStudentLeaderboard(entries)).toHaveLength(1);
-    expect(getStudentLeaderboard(entries)[0]?.player).toBe("2p");
+  it("deletes the legacy browser leaderboard", () => {
+    const removeItem = vi.fn();
+    clearLegacyLeaderboard({ removeItem });
+    expect(removeItem).toHaveBeenCalledWith(LEGACY_LEADERBOARD_KEY);
   });
 
-  it("keeps legacy nickname records as previous records", () => {
-    const storage = createStorage();
-    storage.setItem(
-      LEADERBOARD_KEY,
-      '[{"id":"old","nickname":"공룡","player":"1p","score":30,"createdAt":1}]',
-    );
-    const entries = recordLeaderboardScore(
-      { studentId: "202401", name: "홍길동", player: "2p", score: 50 },
-      storage,
-      2,
-    );
-    expect(entries.find(({ studentId }) => !studentId))
-      .toMatchObject({ studentId: "", name: "공룡", score: 30 });
-    expect(parseLeaderboard(storage.getItem(LEADERBOARD_KEY))).toHaveLength(2);
+  it("loads leaderboard records from the API", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(
+      JSON.stringify({ entries }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    )));
+    await expect(fetchLeaderboard()).resolves.toEqual([entries[1], entries[0]]);
+    expect(fetch).toHaveBeenCalledWith("/api/leaderboard", expect.any(Object));
+  });
+
+  it("posts normalized scores to the API", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(
+      JSON.stringify({ entry: entries[1], isNewBest: true }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    )));
+    await expect(recordLeaderboardScore({
+      studentId: " 202401 ",
+      name: " 빠른   공룡 ",
+      score: 80.9,
+    })).resolves.toEqual({ entry: entries[1], isNewBest: true });
+    expect(fetch).toHaveBeenCalledWith("/api/leaderboard", expect.objectContaining({
+      method: "POST",
+      body: JSON.stringify({ studentId: "202401", name: "빠른 공룡", score: 80 }),
+    }));
   });
 });

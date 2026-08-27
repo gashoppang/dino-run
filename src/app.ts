@@ -18,13 +18,12 @@ import {
 } from "./game/engine";
 import { createCanvasRenderer } from "./game/canvasRenderer";
 import {
-  LEADERBOARD_KEY,
-  LEADERBOARD_UPDATED_EVENT,
+  clearLegacyLeaderboard,
+  fetchLeaderboard,
   getBestScoreForStudent,
   getStudentLeaderboard,
   normalizeName,
   normalizeStudentId,
-  readLeaderboard,
   recordLeaderboardScore,
   type PlayerId,
 } from "./leaderboard";
@@ -38,6 +37,8 @@ interface PlayerController {
   studentId: string;
   name: string;
   scoreRecorded: boolean;
+  scoreSubmitting: boolean;
+  scoreSaveFailed: boolean;
   canvas: HTMLCanvasElement;
   stage: HTMLElement;
   score: HTMLElement;
@@ -57,6 +58,7 @@ interface PlayerController {
 
 const app = document.querySelector<HTMLElement>("#app")!;
 if (!app) throw new Error("App root is unavailable.");
+clearLegacyLeaderboard();
 
 let cleanupRoute: (() => void) | undefined;
 
@@ -173,6 +175,8 @@ function createPlayerController(player: PlayerId): PlayerController {
     studentId: "",
     name: "",
     scoreRecorded: false,
+    scoreSubmitting: false,
+    scoreSaveFailed: false,
     canvas,
     stage,
     score: requireElement("[data-score]", stage),
@@ -212,9 +216,11 @@ function updatePlayerInterface(player: PlayerController): void {
 
   if (state.phase === "gameOver") {
     player.overlayTitle.textContent = `${state.score}점`;
-    player.overlayCopy.textContent = player.isNewBest
-      ? `${player.name}님의 신기록입니다`
-      : `${player.studentId} ${player.name}의 최고기록 ${state.bestScore}점`;
+    player.overlayCopy.textContent = player.scoreSaveFailed
+      ? "기록을 저장하지 못했습니다"
+      : player.isNewBest
+        ? `${player.name}님의 신기록입니다`
+        : `${player.studentId} ${player.name}의 최고기록 ${state.bestScore}점`;
   }
 }
 
@@ -282,6 +288,7 @@ function mountGame(): () => void {
   const sharedCopy = requireElement<HTMLElement>("[data-shared-copy]", sharedControl);
   let previousTime = performance.now();
   let animationFrame = 0;
+  let isLeaderboardBusy = false;
 
   const clearIdentityForm = (): void => {
     for (const player of players) {
@@ -347,7 +354,8 @@ function mountGame(): () => void {
     }
   };
 
-  const startOrResumeRound = (): void => {
+  const startOrResumeRound = async (): Promise<void> => {
+    if (isLeaderboardBusy) return;
     const hasPausedPlayer = players.some((player) => player.state.phase === "paused");
     if (hasPausedPlayer) {
       players.forEach((player) => resumeGame(player.state));
@@ -362,6 +370,8 @@ function mountGame(): () => void {
           player.studentId = "";
           player.name = "";
           player.scoreRecorded = false;
+          player.scoreSubmitting = false;
+          player.scoreSaveFailed = false;
           player.isNewBest = false;
           updatePlayerInterface(player);
           player.render(player.state);
@@ -373,10 +383,26 @@ function mountGame(): () => void {
       }
       if (!canStart) return;
       if (!readIdentityForm()) return;
-      const leaderboard = readLeaderboard();
+      isLeaderboardBusy = true;
+      sharedButton.disabled = true;
+      identityError.textContent = "기록을 불러오는 중입니다.";
+      let leaderboard;
+      try {
+        leaderboard = await fetchLeaderboard();
+      } catch {
+        identityError.textContent = "리더보드를 불러오지 못했습니다. 다시 시도하세요.";
+        isLeaderboardBusy = false;
+        sharedButton.disabled = false;
+        return;
+      }
+      isLeaderboardBusy = false;
+      sharedButton.disabled = false;
+      identityError.textContent = "";
       for (const player of players) {
         player.state.bestScore = getBestScoreForStudent(leaderboard, player.studentId);
         player.scoreRecorded = false;
+        player.scoreSubmitting = false;
+        player.scoreSaveFailed = false;
         player.isNewBest = false;
         startGame(player.state);
         updatePlayerInterface(player);
@@ -387,18 +413,29 @@ function mountGame(): () => void {
     updateSharedControl();
   };
 
-  const recordFinishedScore = (player: PlayerController): void => {
-    if (player.state.phase !== "gameOver" || player.scoreRecorded) return;
-    const previousBest = getBestScoreForStudent(readLeaderboard(), player.studentId);
-    player.state.bestScore = Math.max(previousBest, player.state.score);
-    player.isNewBest = player.state.score > previousBest;
-    player.scoreRecorded = true;
-    recordLeaderboardScore({
-      studentId: player.studentId,
-      name: player.name,
-      player: player.id,
-      score: player.state.score,
-    });
+  const recordFinishedScore = async (player: PlayerController): Promise<void> => {
+    if (
+      player.state.phase !== "gameOver" ||
+      player.scoreRecorded ||
+      player.scoreSubmitting
+    ) return;
+    player.scoreSubmitting = true;
+    try {
+      const saved = await recordLeaderboardScore({
+        studentId: player.studentId,
+        name: player.name,
+        score: player.state.score,
+      });
+      player.state.bestScore = saved.entry.score;
+      player.isNewBest = saved.isNewBest;
+    } catch {
+      player.state.bestScore = Math.max(player.state.bestScore, player.state.score);
+      player.scoreSaveFailed = true;
+    } finally {
+      player.scoreSubmitting = false;
+      player.scoreRecorded = true;
+      updatePlayerInterface(player);
+    }
     if (players.every(({ state, scoreRecorded }) => state.phase === "gameOver" && scoreRecorded)) {
       clearIdentityForm();
     }
@@ -439,7 +476,7 @@ function mountGame(): () => void {
           showPickupToast(player, ITEM_MESSAGES[item]);
         }
       }
-      recordFinishedScore(player);
+      void recordFinishedScore(player);
       updatePlayerInterface(player);
       player.render(player.state);
     }
@@ -452,7 +489,7 @@ function mountGame(): () => void {
     if (event.target instanceof HTMLButtonElement && event.code === "Space") return;
     if (event.code === "Space") {
       event.preventDefault();
-      if (!event.repeat) startOrResumeRound();
+      if (!event.repeat) void startOrResumeRound();
       return;
     }
     const player = event.code === "KeyW" || event.code === "KeyS"
@@ -512,7 +549,7 @@ function mountGame(): () => void {
 
   identityForm.addEventListener("submit", (event) => {
     event.preventDefault();
-    startOrResumeRound();
+    void startOrResumeRound();
   });
   window.addEventListener("keydown", handleKeyDown, { passive: false });
   window.addEventListener("keyup", handleKeyUp);
@@ -549,8 +586,28 @@ function renderLeaderboard(): () => void {
 
   const podium = requireElement<HTMLOListElement>("[data-podium-list]", app);
   const list = requireElement<HTMLOListElement>("[data-leaderboard-list]", app);
-  const updateList = (): void => {
-    const scores = getStudentLeaderboard(readLeaderboard()).slice(0, 10);
+  const abortController = new AbortController();
+  let isLoading = false;
+  const updateList = async (): Promise<void> => {
+    if (isLoading) return;
+    isLoading = true;
+    let scores;
+    try {
+      scores = getStudentLeaderboard(
+        await fetchLeaderboard(abortController.signal),
+      ).slice(0, 10);
+    } catch {
+      if (!abortController.signal.aborted) {
+        podium.hidden = true;
+        list.hidden = false;
+        list.innerHTML = `
+          <li class="score-row is-placeholder"><span class="rank">--</span><span class="score-name"><b>불러오기 실패</b></span><strong>-----</strong></li>
+        `;
+      }
+      isLoading = false;
+      return;
+    }
+    isLoading = false;
     const topScores = scores.slice(0, 3);
     const remainingScores = scores.slice(3);
     podium.hidden = topScores.length === 0;
@@ -572,16 +629,14 @@ function renderLeaderboard(): () => void {
       <li class="score-row is-placeholder"><span class="rank">--</span><span class="score-name"><b>기록 없음</b></span><strong>-----</strong></li>
     ` : "";
   };
-  const handleStorage = (event: StorageEvent): void => {
-    if (event.key === LEADERBOARD_KEY || event.key === null) updateList();
-  };
-
-  updateList();
-  window.addEventListener("storage", handleStorage);
-  window.addEventListener(LEADERBOARD_UPDATED_EVENT, updateList);
+  list.innerHTML = `
+    <li class="score-row is-placeholder"><span class="rank">--</span><span class="score-name"><b>불러오는 중</b></span><strong>-----</strong></li>
+  `;
+  void updateList();
+  const refreshInterval = window.setInterval(() => void updateList(), 3000);
   return () => {
-    window.removeEventListener("storage", handleStorage);
-    window.removeEventListener(LEADERBOARD_UPDATED_EVENT, updateList);
+    abortController.abort();
+    window.clearInterval(refreshInterval);
   };
 }
 

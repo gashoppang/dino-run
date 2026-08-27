@@ -17,5 +17,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true
   },
-  "include": ["src", "vitest.config.ts"]
+  "include": ["src", "api", "vitest.config.ts"]
 }

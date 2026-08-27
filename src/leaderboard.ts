@@ -4,18 +4,20 @@ export interface LeaderboardEntry {
   id: string;
   studentId: string;
   name: string;
-  player: PlayerId;
   score: number;
   createdAt: number;
 }
 
-interface ScoreStorage {
-  getItem(key: string): string | null;
-  setItem(key: string, value: string): void;
+export interface RecordedScore {
+  entry: LeaderboardEntry;
+  isNewBest: boolean;
 }
 
-export const LEADERBOARD_KEY = "dino-run:leaderboard:v1";
-export const LEADERBOARD_UPDATED_EVENT = "dino-run:leaderboard-updated";
+interface LegacyScoreStorage {
+  removeItem(key: string): void;
+}
+
+export const LEGACY_LEADERBOARD_KEY = "dino-run:leaderboard:v1";
 const MAX_ENTRIES = 100;
 const MAX_STUDENT_ID_LENGTH = 16;
 const MAX_NAME_LENGTH = 12;
@@ -34,63 +36,53 @@ export function normalizeName(value: string): string {
 
 function normalizeEntry(value: unknown): LeaderboardEntry | undefined {
   if (!value || typeof value !== "object") return undefined;
-  const entry = value as Partial<LeaderboardEntry> & { nickname?: unknown };
+  const entry = value as Partial<LeaderboardEntry> & { id?: string | number };
   if (
-    typeof entry.id !== "string" ||
-    (entry.player !== "1p" && entry.player !== "2p") ||
+    (typeof entry.id !== "string" && typeof entry.id !== "number") ||
+    typeof entry.studentId !== "string" ||
+    typeof entry.name !== "string" ||
     typeof entry.score !== "number" ||
     !Number.isFinite(entry.score) ||
     typeof entry.createdAt !== "number" ||
     !Number.isFinite(entry.createdAt)
   ) return undefined;
 
-  const studentId = typeof entry.studentId === "string"
-    ? normalizeStudentId(entry.studentId)
-    : "";
-  const name = typeof entry.name === "string"
-    ? normalizeName(entry.name)
-    : typeof entry.nickname === "string"
-      ? normalizeName(entry.nickname)
-      : "";
-  if (!name) return undefined;
+  const studentId = normalizeStudentId(entry.studentId);
+  const name = normalizeName(entry.name);
+  if (!studentId || !name) return undefined;
 
   return {
-    id: entry.id,
+    id: String(entry.id),
     studentId,
     name,
-    player: entry.player,
     score: Math.max(0, Math.floor(entry.score)),
     createdAt: entry.createdAt,
   };
 }
 
-export function parseLeaderboard(raw: string | null): LeaderboardEntry[] {
-  if (!raw) return [];
+export function parseLeaderboard(value: unknown): LeaderboardEntry[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map(normalizeEntry)
+    .filter((entry): entry is LeaderboardEntry => Boolean(entry))
+    .sort((a, b) => b.score - a.score || a.createdAt - b.createdAt)
+    .slice(0, MAX_ENTRIES);
+}
+
+export function clearLegacyLeaderboard(
+  storage: LegacyScoreStorage | undefined = typeof localStorage === "undefined"
+    ? undefined
+    : localStorage,
+): void {
   try {
-    const parsed: unknown = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .map(normalizeEntry)
-      .filter((entry): entry is LeaderboardEntry => Boolean(entry))
-      .sort((a, b) => b.score - a.score || a.createdAt - b.createdAt)
-      .slice(0, MAX_ENTRIES);
+    storage?.removeItem(LEGACY_LEADERBOARD_KEY);
   } catch {
-    return [];
+    // Storage can be unavailable in private or locked-down browser contexts.
   }
 }
 
-export function readLeaderboard(storage: ScoreStorage = localStorage): LeaderboardEntry[] {
-  try {
-    return parseLeaderboard(storage.getItem(LEADERBOARD_KEY));
-  } catch {
-    return [];
-  }
-}
-
-function studentKey(studentId: string, name = ""): string {
-  const normalizedStudentId = normalizeStudentId(studentId).toLocaleLowerCase("ko-KR");
-  const normalizedName = normalizeName(name).toLocaleLowerCase("ko-KR");
-  return normalizedStudentId || (normalizedName ? `legacy:${normalizedName}` : "");
+function studentKey(studentId: string): string {
+  return normalizeStudentId(studentId).toLocaleLowerCase("ko-KR");
 }
 
 export function getBestScoreForStudent(
@@ -100,7 +92,7 @@ export function getBestScoreForStudent(
   const key = studentKey(studentId);
   if (!key) return 0;
   return entries.reduce(
-    (best, entry) => studentKey(entry.studentId, entry.name) === key
+    (best, entry) => studentKey(entry.studentId) === key
       ? Math.max(best, entry.score)
       : best,
     0,
@@ -112,7 +104,7 @@ export function getStudentLeaderboard(
 ): LeaderboardEntry[] {
   const bestByStudent = new Map<string, LeaderboardEntry>();
   for (const entry of entries) {
-    const key = studentKey(entry.studentId, entry.name);
+    const key = studentKey(entry.studentId);
     const current = bestByStudent.get(key);
     if (!current || entry.score > current.score) bestByStudent.set(key, entry);
   }
@@ -121,33 +113,50 @@ export function getStudentLeaderboard(
   );
 }
 
-export function recordLeaderboardScore(
-  entry: Omit<LeaderboardEntry, "id" | "createdAt">,
-  storage: ScoreStorage = localStorage,
-  now = Date.now(),
-): LeaderboardEntry[] {
-  const studentId = normalizeStudentId(entry.studentId);
-  const name = normalizeName(entry.name);
-  if (!studentId || !name) return readLeaderboard(storage);
-
-  const nextEntry: LeaderboardEntry = {
-    id: `${now}-${entry.player}-${Math.random().toString(36).slice(2, 9)}`,
-    studentId,
-    name,
-    player: entry.player,
-    score: Math.max(0, Math.floor(entry.score)),
-    createdAt: now,
-  };
-  const entries = [...readLeaderboard(storage), nextEntry]
-    .sort((a, b) => b.score - a.score || a.createdAt - b.createdAt)
-    .slice(0, MAX_ENTRIES);
+async function readJson(response: Response): Promise<unknown> {
   try {
-    storage.setItem(LEADERBOARD_KEY, JSON.stringify(entries));
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent(LEADERBOARD_UPDATED_EVENT));
-    }
+    return await response.json();
   } catch {
-    // Storage can be unavailable in private or locked-down browser contexts.
+    return undefined;
   }
-  return entries;
+}
+
+export async function fetchLeaderboard(signal?: AbortSignal): Promise<LeaderboardEntry[]> {
+  const response = await fetch("/api/leaderboard", {
+    headers: { Accept: "application/json" },
+    signal,
+  });
+  const body = await readJson(response);
+  if (!response.ok) throw new Error("리더보드를 불러오지 못했습니다.");
+  const entries = body && typeof body === "object"
+    ? (body as { entries?: unknown }).entries
+    : undefined;
+  return parseLeaderboard(entries);
+}
+
+export async function recordLeaderboardScore(
+  score: { studentId: string; name: string; score: number },
+): Promise<RecordedScore> {
+  const response = await fetch("/api/leaderboard", {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      studentId: normalizeStudentId(score.studentId),
+      name: normalizeName(score.name),
+      score: Math.max(0, Math.floor(score.score)),
+    }),
+  });
+  const body = await readJson(response);
+  if (!response.ok || !body || typeof body !== "object") {
+    throw new Error("점수를 저장하지 못했습니다.");
+  }
+  const payload = body as { entry?: unknown; isNewBest?: unknown };
+  const entry = normalizeEntry(payload.entry);
+  if (!entry || typeof payload.isNewBest !== "boolean") {
+    throw new Error("점수 저장 응답이 올바르지 않습니다.");
+  }
+  return { entry, isNewBest: payload.isNewBest };
 }

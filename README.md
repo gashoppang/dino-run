@@ -29,6 +29,14 @@ npm install
 npm run dev
 ```
 
+DB API까지 함께 실행하려면 `.env.example`을 참고해 `.env`에 `DATABASE_URL`을 설정한 뒤 Vercel 개발 서버를 사용합니다.
+
+```bash
+npx vercel@59.5.0 dev --listen 5173
+```
+
+리더보드는 PlanetScale Postgres의 `leaderboard_scores` 테이블을 사용합니다. API에는 테이블 읽기·쓰기 권한만 부여하며, 브라우저의 이전 로컬 리더보드 값은 사용하지 않고 삭제합니다.
+
 검증:
 
 ```bash
