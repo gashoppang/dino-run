@@ -9,6 +9,7 @@ import {
   normalizeStudentId,
   parseLeaderboard,
   recordLeaderboardScore,
+  resetLeaderboard,
 } from "./leaderboard";
 
 const entries = [
@@ -72,6 +73,18 @@ describe("leaderboard", () => {
     expect(fetch).toHaveBeenCalledWith("/api/leaderboard", expect.objectContaining({
       method: "POST",
       body: JSON.stringify({ studentId: "202401", name: "빠른 공룡", score: 80 }),
+    }));
+  });
+
+  it("resets the server leaderboard with an explicit confirmation", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(
+      JSON.stringify({ deleted: 7 }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    )));
+    await expect(resetLeaderboard()).resolves.toBe(7);
+    expect(fetch).toHaveBeenCalledWith("/api/leaderboard", expect.objectContaining({
+      method: "DELETE",
+      body: JSON.stringify({ confirmation: "리더보드 초기화" }),
     }));
   });
 });

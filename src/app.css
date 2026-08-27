@@ -261,6 +261,7 @@ a { color: inherit; }
   display: flex;
   gap: 7px;
 }
+.hide-game-controls .mobile-controls { display: none; }
 .mobile-controls button {
   width: clamp(68px, 7.5vw, 88px);
   height: clamp(60px, 6.5vw, 76px);
@@ -432,6 +433,7 @@ a { color: inherit; }
 .score-row.is-placeholder { opacity: .38; }
 .settings-list { display: grid; }
 .setting-row { grid-template-columns: 1fr auto; gap: 24px; cursor: pointer; }
+.setting-action { cursor: default; }
 .setting-row > span { display: grid; gap: 5px; }
 .setting-row small { color: #829b98; }
 .setting-row input {
@@ -456,6 +458,19 @@ a { color: inherit; }
 .setting-row input:checked { background: #b95f55; }
 .setting-row input:checked::before { background: #ffe7b5; transform: translateX(22px); }
 .setting-row input:focus-visible { outline: 3px solid #ffe7b5; outline-offset: 3px; }
+.danger-button {
+  min-width: 92px;
+  padding: 11px 16px;
+  border: 1px solid rgba(255, 132, 109, .6);
+  color: #ffad98;
+  background: rgba(185, 95, 85, .13);
+  font: 800 .82rem/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+  cursor: pointer;
+}
+.danger-button:hover { color: #fff0c9; background: rgba(185, 95, 85, .32); }
+.danger-button:disabled { opacity: .5; cursor: wait; }
+.danger-button:focus-visible { outline: 3px solid #ffe7b5; outline-offset: 3px; }
+.settings-status { min-height: 1.5em; margin: 18px 0 0; color: #a9bcb8; font-size: .82rem; }
 .mock-note { max-width: 900px; margin: 22px 0 0; color: #66817e; font-size: .78rem; }
 
 @media (hover: hover) and (pointer: fine) {

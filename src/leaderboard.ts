@@ -160,3 +160,22 @@ export async function recordLeaderboardScore(
   }
   return { entry, isNewBest: payload.isNewBest };
 }
+
+export async function resetLeaderboard(): Promise<number> {
+  const response = await fetch("/api/leaderboard", {
+    method: "DELETE",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ confirmation: "리더보드 초기화" }),
+  });
+  const body = await readJson(response);
+  const deleted = body && typeof body === "object"
+    ? (body as { deleted?: unknown }).deleted
+    : undefined;
+  if (!response.ok || typeof deleted !== "number") {
+    throw new Error("리더보드를 초기화하지 못했습니다.");
+  }
+  return Math.max(0, Math.floor(deleted));
+}

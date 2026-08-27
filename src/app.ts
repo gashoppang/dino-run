@@ -25,8 +25,10 @@ import {
   normalizeName,
   normalizeStudentId,
   recordLeaderboardScore,
+  resetLeaderboard,
   type PlayerId,
 } from "./leaderboard";
+import { readGameSettings, writeGameSettings, type GameSettings } from "./settings";
 
 type Route = "/" | "/game" | "/leaderboard" | "/settings";
 
@@ -59,6 +61,17 @@ interface PlayerController {
 const app = document.querySelector<HTMLElement>("#app")!;
 if (!app) throw new Error("App root is unavailable.");
 clearLegacyLeaderboard();
+
+let gameSettings = readGameSettings();
+
+function applyGameSettings(settings: GameSettings): void {
+  document.documentElement.classList.toggle(
+    "hide-game-controls",
+    !settings.showControlButtons,
+  );
+}
+
+applyGameSettings(gameSettings);
 
 let cleanupRoute: (() => void) | undefined;
 
@@ -646,16 +659,48 @@ function renderSettings(): void {
     <main class="subpage-view">
       ${homeLink()}
       <header class="subpage-header">
-        <p class="eyebrow">PREFERENCES</p>
         <h1>설정</h1>
       </header>
-      <section class="settings-list" aria-label="게임 설정 목업">
-        <label class="setting-row"><span><b>화면 흔들림</b><small>충돌 효과</small></span><input type="checkbox" checked></label>
-        <label class="setting-row"><span><b>속도 표시</b><small>현재 속도</small></span><input type="checkbox" checked></label>
-        <label class="setting-row"><span><b>고대비 모드</b><small>장애물 강조</small></span><input type="checkbox"></label>
+      <section class="settings-list" aria-label="게임 설정">
+        <label class="setting-row">
+          <span><b>조작 버튼 표시</b><small>점프·숙이기 버튼</small></span>
+          <input data-control-buttons type="checkbox" aria-label="게임 화면 조작 버튼 표시">
+        </label>
+        <div class="setting-row setting-action">
+          <span><b>리더보드 초기화</b><small>모든 기록 삭제</small></span>
+          <button class="danger-button" data-reset-leaderboard type="button">초기화</button>
+        </div>
       </section>
+      <p class="settings-status" data-settings-status aria-live="polite"></p>
     </main>
   `;
+
+  const controlButtons = requireElement<HTMLInputElement>("[data-control-buttons]", app);
+  const resetButton = requireElement<HTMLButtonElement>("[data-reset-leaderboard]", app);
+  const status = requireElement<HTMLElement>("[data-settings-status]", app);
+  controlButtons.checked = gameSettings.showControlButtons;
+  controlButtons.addEventListener("change", () => {
+    gameSettings = { ...gameSettings, showControlButtons: controlButtons.checked };
+    writeGameSettings(gameSettings);
+    applyGameSettings(gameSettings);
+  });
+  resetButton.addEventListener("click", async () => {
+    if (!window.confirm("리더보드의 모든 기록을 삭제할까요? 이 작업은 되돌릴 수 없습니다.")) {
+      return;
+    }
+    resetButton.disabled = true;
+    status.textContent = "초기화 중입니다.";
+    try {
+      const deleted = await resetLeaderboard();
+      status.textContent = deleted > 0
+        ? `${deleted}개의 기록을 삭제했습니다.`
+        : "삭제할 기록이 없습니다.";
+    } catch {
+      status.textContent = "리더보드를 초기화하지 못했습니다.";
+    } finally {
+      resetButton.disabled = false;
+    }
+  });
 }
 
 function renderRoute(): void {

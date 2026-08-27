@@ -79,6 +79,17 @@ async function readBody(request: Request): Promise<Record<string, unknown> | und
   }
 }
 
+function isSameOrigin(request: Request): boolean {
+  const origin = request.headers.get("origin");
+  const host = request.headers.get("host");
+  if (!origin || !host) return false;
+  try {
+    return new URL(origin).host === host;
+  } catch {
+    return false;
+  }
+}
+
 export async function GET(): Promise<Response> {
   try {
     const database = getSql();
@@ -131,5 +142,25 @@ export async function POST(request: Request): Promise<Response> {
   } catch (error) {
     console.error("Leaderboard API error", error);
     return json({ error: "리더보드 서버에 연결하지 못했습니다." }, 503);
+  }
+}
+
+export async function DELETE(request: Request): Promise<Response> {
+  try {
+    if (!isSameOrigin(request)) {
+      return json({ error: "허용되지 않은 초기화 요청입니다." }, 403);
+    }
+    const body = await readBody(request);
+    if (body?.confirmation !== "리더보드 초기화") {
+      return json({ error: "초기화 확인이 필요합니다." }, 400);
+    }
+    const database = getSql();
+    const deletedRows = await database<{ id: string }[]>`
+      DELETE FROM leaderboard_scores RETURNING id
+    `;
+    return json({ deleted: deletedRows.length });
+  } catch (error) {
+    console.error("Leaderboard API error", error);
+    return json({ error: "리더보드를 초기화하지 못했습니다." }, 503);
   }
 }
