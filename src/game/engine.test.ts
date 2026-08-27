@@ -104,6 +104,58 @@ describe("game engine", () => {
     expect(state.runner.height).toBe(standingHeight);
   });
 
+  it("buffers ducking pressed shortly before landing", () => {
+    const state = createGameState();
+    startGame(state);
+    state.runner.grounded = false;
+    state.runner.y = GROUND_Y - state.runner.height - 1;
+    state.runner.velocityY = 180;
+
+    setDucking(state, true);
+    expect(state.runner.ducking).toBe(false);
+    expect(state.duckBufferTimer).toBeCloseTo(0.12);
+    tickGame(state, 1 / 60, () => 0.5);
+
+    expect(state.runner.grounded).toBe(true);
+    expect(state.runner.ducking).toBe(true);
+    expect(state.duckBufferTimer).toBe(0);
+    expect(state.runner.y + state.runner.height).toBe(GROUND_Y);
+  });
+
+  it("cancels buffered ducking when the input is released", () => {
+    const state = createGameState();
+    startGame(state);
+    state.runner.grounded = false;
+    state.runner.y = GROUND_Y - state.runner.height - 1;
+    state.runner.velocityY = 180;
+
+    setDucking(state, true);
+    setDucking(state, false);
+    tickGame(state, 1 / 60, () => 0.5);
+
+    expect(state.runner.grounded).toBe(true);
+    expect(state.runner.ducking).toBe(false);
+    expect(state.duckBufferTimer).toBe(0);
+  });
+
+  it("expires buffered ducking when landing is too late", () => {
+    const state = createGameState();
+    startGame(state);
+    state.runner.grounded = false;
+    state.runner.y = 100;
+    state.runner.velocityY = 0;
+    setDucking(state, true);
+
+    for (let frame = 0; frame < 4; frame += 1) tickGame(state, 0.04, () => 0.5);
+    state.runner.y = GROUND_Y - state.runner.height - 1;
+    state.runner.velocityY = 180;
+    tickGame(state, 1 / 60, () => 0.5);
+
+    expect(state.runner.grounded).toBe(true);
+    expect(state.runner.ducking).toBe(false);
+    expect(state.duckBufferTimer).toBe(0);
+  });
+
   it("lets a ducking runner pass under a bird", () => {
     const createBird = () => ({
       id: 1,

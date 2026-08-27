@@ -78,6 +78,7 @@ export interface GameState {
   spawnTimer: number;
   itemSpawnTimer: number;
   jumpBufferTimer: number;
+  duckBufferTimer: number;
   nextObstacleId: number;
   nextItemId: number;
   elapsed: number;
@@ -92,6 +93,7 @@ const GRAVITY = 2250;
 const JUMP_VELOCITY = -900;
 const WING_FLAP_VELOCITY = -470;
 const JUMP_BUFFER_DURATION = 0.12;
+const DUCK_BUFFER_DURATION = 0.12;
 const STARTING_SPEED = 340;
 const MAX_SPEED = 720;
 const SPEED_BOOST_MULTIPLIER = 1.28;
@@ -155,6 +157,7 @@ export function createGameState(bestScore = 0): GameState {
     spawnTimer: 1.15,
     itemSpawnTimer: 8,
     jumpBufferTimer: 0,
+    duckBufferTimer: 0,
     nextObstacleId: 1,
     nextItemId: 1,
     elapsed: 0,
@@ -218,7 +221,16 @@ export function jump(state: GameState): boolean {
 }
 
 export function setDucking(state: GameState, ducking: boolean): void {
-  if (state.phase !== "running" || !state.runner.grounded || state.effects.wings > 0) return;
+  if (state.phase !== "running") return;
+  if (!ducking) {
+    state.duckBufferTimer = 0;
+    if (!state.runner.grounded || state.effects.wings > 0) return;
+  } else if (!state.runner.grounded || state.effects.wings > 0) {
+    state.duckBufferTimer = DUCK_BUFFER_DURATION;
+    return;
+  } else {
+    state.duckBufferTimer = 0;
+  }
   state.runner.ducking = ducking;
   state.runner.height = ducking ? DUCK_HEIGHT : RUNNER_HEIGHT;
   state.runner.y = GROUND_Y - state.runner.height;
@@ -382,6 +394,7 @@ export function tickGame(
   const dt = Math.min(Math.max(deltaSeconds, 0), 0.04);
   state.elapsed += dt;
   state.jumpBufferTimer = Math.max(0, state.jumpBufferTimer - dt);
+  state.duckBufferTimer = Math.max(0, state.duckBufferTimer - dt);
   updateEffects(state, dt);
 
   if (!state.runner.grounded) {
@@ -397,6 +410,7 @@ export function tickGame(
     }
   }
   if (state.runner.grounded && state.jumpBufferTimer > 0) jump(state);
+  if (state.runner.grounded && state.duckBufferTimer > 0) setDucking(state, true);
 
   const baseSpeed = Math.min(MAX_SPEED, STARTING_SPEED + state.score * 0.72);
   state.speed = baseSpeed * (state.effects.speed > 0 ? SPEED_BOOST_MULTIPLIER : 1);
