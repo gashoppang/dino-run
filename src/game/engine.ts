@@ -91,7 +91,7 @@ const WING_FLAP_VELOCITY = -470;
 const STARTING_SPEED = 340;
 const MAX_SPEED = 720;
 const SPEED_BOOST_MULTIPLIER = 1.28;
-const MIN_SPAWN_DELAY = 0.78;
+const MIN_SPAWN_DELAY = 0.9;
 const ITEM_SIZE = 42;
 const ITEM_OBSTACLE_GAP = 96;
 const BLOCKED_SPAWN_RETRY = 0.65;
@@ -276,7 +276,7 @@ function spawnObstacle(state: GameState, random: () => number): void {
   });
 
   const fairSpeedGap = state.effects.speed > 0 ? 1.16 : 1;
-  const minimumDelay = state.effects.speed > 0 ? 0.86 : MIN_SPAWN_DELAY;
+  const minimumDelay = state.effects.speed > 0 ? 0.96 : MIN_SPAWN_DELAY;
   state.spawnTimer = Math.max(
     minimumDelay,
     getNextSpawnDelay(state.speed, random) * fairSpeedGap,
