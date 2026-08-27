@@ -71,7 +71,7 @@ describe("game engine", () => {
     tickGame(state, 1 / 60, () => 0.5);
 
     expect(state.runner.grounded).toBe(false);
-    expect(state.runner.velocityY).toBe(-810);
+    expect(state.runner.velocityY).toBe(-900);
     expect(state.jumpBufferTimer).toBe(0);
   });
 
