@@ -331,7 +331,7 @@ a { color: inherit; }
 .podium-name { min-width: 0; display: grid; gap: 6px; }
 .podium-name b { overflow-wrap: anywhere; font-size: clamp(.9rem, 2vw, 1.35rem); }
 .podium-name small {
-  color: #94aaa6;
+  color: rgba(239, 244, 243, .76);
   font: 700 clamp(.56rem, 1vw, .66rem)/1 ui-monospace, SFMono-Regular, Consolas, monospace;
   letter-spacing: .06em;
 }
@@ -351,7 +351,7 @@ a { color: inherit; }
 .score-row b { font-size: 1.1rem; }
 .score-name { display: grid; gap: 5px; }
 .score-name small {
-  color: #8fa5a1;
+  color: rgba(239, 244, 243, .7);
   font: 700 .64rem/1 ui-monospace, SFMono-Regular, Consolas, monospace;
   letter-spacing: .07em;
 }
