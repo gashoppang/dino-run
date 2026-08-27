@@ -186,19 +186,19 @@ describe("game engine", () => {
     const normalGap = spawnWithCadence(0.5);
     const breatherGap = spawnWithCadence(0.9);
 
-    expect(tightGap).toBeCloseTo(0.9);
+    expect(tightGap).toBeCloseTo(1.2);
     expect(normalGap).toBeCloseTo(1.3);
     expect(breatherGap).toBeCloseTo(1.995);
   });
 
-  it("keeps the minimum obstacle gap at 0.9 seconds at top speed", () => {
+  it("keeps the minimum obstacle gap at 1.2 seconds at top speed", () => {
     const state = createGameState();
     startGame(state);
     state.distance = 10000;
     state.spawnTimer = 0;
     const rolls = [0.5, 0, 0, 0];
     tickGame(state, 1 / 60, () => rolls.shift() ?? 0);
-    expect(state.spawnTimer).toBe(0.9);
+    expect(state.spawnTimer).toBe(1.2);
   });
 
   it("uses the configured item spawn cadence", () => {
