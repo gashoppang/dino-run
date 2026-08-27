@@ -481,7 +481,7 @@ function mountGame(): () => void {
 function renderLeaderboard(): () => void {
   document.title = "리더보드 · 공룡 게임";
   app.innerHTML = `
-    <main class="subpage-view">
+    <main class="subpage-view leaderboard-view">
       ${homeLink()}
       <header class="subpage-header">
         <p class="eyebrow">LOCAL RECORDS</p>
