@@ -146,7 +146,7 @@ function drawDust(context: CanvasRenderingContext2D, state: GameState): void {
   }
 }
 
-const DINO_COLOR = "#566063";
+const DINO_COLOR = "#26383e";
 
 function drawStandingDino(context: CanvasRenderingContext2D, frame: number): void {
   polygon(context, [
