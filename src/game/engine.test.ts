@@ -168,6 +168,48 @@ describe("game engine", () => {
     expect(state.spawnTimer).toBe(0.72);
   });
 
+  it("defers an item until it has a safe gap from an obstacle", () => {
+    const state = createGameState();
+    startGame(state);
+    state.spawnTimer = 0;
+    state.itemSpawnTimer = 0;
+
+    tickGame(state, 1 / 60, () => 0.5);
+
+    expect(state.obstacles).toHaveLength(1);
+    expect(state.items).toHaveLength(0);
+    expect(state.itemSpawnTimer).toBeCloseTo(0.65);
+
+    for (let frame = 0; frame < 50 && state.items.length === 0; frame += 1) {
+      tickGame(state, 1 / 60, () => 0.5);
+    }
+
+    const obstacle = state.obstacles[0]!;
+    const item = state.items[0]!;
+    expect(item).toBeDefined();
+    expect(item.x - (obstacle.x + obstacle.width)).toBeGreaterThanOrEqual(96);
+  });
+
+  it("defers an obstacle when an item already occupies its spawn lane", () => {
+    const state = createGameState();
+    startGame(state);
+    state.itemSpawnTimer = 100;
+    state.spawnTimer = 0;
+    state.items.push({
+      id: 1,
+      kind: "wings",
+      x: state.viewportWidth + 64,
+      y: GROUND_Y - 88,
+      width: 42,
+      height: 42,
+    });
+
+    tickGame(state, 1 / 60, () => 0.5);
+
+    expect(state.obstacles).toHaveLength(0);
+    expect(state.spawnTimer).toBeCloseTo(0.65);
+  });
+
   it("ends the game and updates the best score on collision", () => {
     const state = createGameState(2);
     startGame(state);

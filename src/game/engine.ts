@@ -87,6 +87,8 @@ const MAX_SPEED = 720;
 const SPEED_BOOST_MULTIPLIER = 1.28;
 const MIN_SPAWN_DELAY = 0.72;
 const ITEM_SIZE = 42;
+const ITEM_OBSTACLE_GAP = 96;
+const BLOCKED_SPAWN_RETRY = 0.65;
 const ITEM_KINDS: ItemKind[] = [
   "shield",
   "giant",
@@ -224,7 +226,23 @@ function getNextItemSpawnDelay(random: () => number): number {
   return 8 + random() * 7;
 }
 
+function isHorizontallyNear(
+  x: number,
+  width: number,
+  other: { x: number; width: number },
+): boolean {
+  return (
+    x < other.x + other.width + ITEM_OBSTACLE_GAP &&
+    x + width + ITEM_OBSTACLE_GAP > other.x
+  );
+}
+
 function spawnObstacle(state: GameState, random: () => number): void {
+  const spawnX = state.viewportWidth + 48;
+  if (state.items.some((item) => isHorizontallyNear(spawnX, 104, item))) {
+    state.spawnTimer = BLOCKED_SPAWN_RETRY;
+    return;
+  }
   const cactusKinds: ObstacleKind[] = ["cactus-small", "cactus-large"];
   if (state.score >= 35) cactusKinds.push("cactus-double");
   if (state.score >= 70) cactusKinds.push("cactus-triple");
@@ -239,7 +257,7 @@ function spawnObstacle(state: GameState, random: () => number): void {
   state.obstacles.push({
     id: state.nextObstacleId++,
     kind,
-    x: state.viewportWidth + 48,
+    x: spawnX,
     y,
     width,
     height,
@@ -254,6 +272,11 @@ function spawnObstacle(state: GameState, random: () => number): void {
 }
 
 function spawnItem(state: GameState, random: () => number): void {
+  const spawnX = state.viewportWidth + 64;
+  if (state.obstacles.some((obstacle) => isHorizontallyNear(spawnX, ITEM_SIZE, obstacle))) {
+    state.itemSpawnTimer = BLOCKED_SPAWN_RETRY;
+    return;
+  }
   const kind = ITEM_KINDS[Math.min(
     ITEM_KINDS.length - 1,
     Math.floor(random() * ITEM_KINDS.length),
@@ -262,7 +285,7 @@ function spawnItem(state: GameState, random: () => number): void {
   state.items.push({
     id: state.nextItemId++,
     kind,
-    x: state.viewportWidth + 64,
+    x: spawnX,
     y: GROUND_Y - (heightRoll < 0.58 ? 88 : 142),
     width: ITEM_SIZE,
     height: ITEM_SIZE,
