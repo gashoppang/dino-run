@@ -79,54 +79,55 @@ async function readBody(request: Request): Promise<Record<string, unknown> | und
   }
 }
 
-export default async function handler(request: Request): Promise<Response> {
+export async function GET(): Promise<Response> {
   try {
     const database = getSql();
+    const rows = await database<ScoreRow[]>`
+      SELECT id, student_id, name, score, updated_at AS created_at
+      FROM leaderboard_scores
+      ORDER BY score DESC, updated_at ASC
+      LIMIT 100
+    `;
+    return json({ entries: rows.map(serializeRow) });
+  } catch (error) {
+    console.error("Leaderboard API error", error);
+    return json({ error: "리더보드 서버에 연결하지 못했습니다." }, 503);
+  }
+}
 
-    if (request.method === "GET") {
-      const rows = await database<ScoreRow[]>`
-        SELECT id, student_id, name, score, updated_at AS created_at
-        FROM leaderboard_scores
-        ORDER BY score DESC, updated_at ASC
-        LIMIT 100
+export async function POST(request: Request): Promise<Response> {
+  try {
+    const body = await readBody(request);
+    const studentId = normalizeStudentId(body?.studentId);
+    const name = normalizeName(body?.name);
+    const score = normalizeScore(body?.score);
+    if (!studentId || !name || score === undefined) {
+      return json({ error: "학번, 이름, 점수를 확인하세요." }, 400);
+    }
+
+    const database = getSql();
+    const saved = await database.begin(async (transaction) => {
+      await transaction`SELECT pg_advisory_xact_lock(hashtext(${studentId}))`;
+      const previousRows = await transaction<{ score: number }[]>`
+        SELECT score FROM leaderboard_scores WHERE student_id = ${studentId}
       `;
-      return json({ entries: rows.map(serializeRow) });
-    }
-
-    if (request.method === "POST") {
-      const body = await readBody(request);
-      const studentId = normalizeStudentId(body?.studentId);
-      const name = normalizeName(body?.name);
-      const score = normalizeScore(body?.score);
-      if (!studentId || !name || score === undefined) {
-        return json({ error: "학번, 이름, 점수를 확인하세요." }, 400);
-      }
-
-      const saved = await database.begin(async (transaction) => {
-        await transaction`SELECT pg_advisory_xact_lock(hashtext(${studentId}))`;
-        const previousRows = await transaction<{ score: number }[]>`
-          SELECT score FROM leaderboard_scores WHERE student_id = ${studentId}
-        `;
-        const previousBest = previousRows[0]?.score ?? 0;
-        const rows = await transaction<ScoreRow[]>`
-          INSERT INTO leaderboard_scores (student_id, name, score)
-          VALUES (${studentId}, ${name}, ${score})
-          ON CONFLICT (student_id) DO UPDATE SET
-            name = EXCLUDED.name,
-            score = GREATEST(leaderboard_scores.score, EXCLUDED.score),
-            updated_at = CASE
-              WHEN EXCLUDED.score > leaderboard_scores.score THEN NOW()
-              ELSE leaderboard_scores.updated_at
-            END
-          RETURNING id, student_id, name, score, updated_at AS created_at
-        `;
-        return { row: rows[0], isNewBest: score > previousBest };
-      });
-      if (!saved.row) throw new Error("Saved score was not returned");
-      return json({ entry: serializeRow(saved.row), isNewBest: saved.isNewBest });
-    }
-
-    return json({ error: "지원하지 않는 요청입니다." }, 405);
+      const previousBest = previousRows[0]?.score ?? 0;
+      const rows = await transaction<ScoreRow[]>`
+        INSERT INTO leaderboard_scores (student_id, name, score)
+        VALUES (${studentId}, ${name}, ${score})
+        ON CONFLICT (student_id) DO UPDATE SET
+          name = EXCLUDED.name,
+          score = GREATEST(leaderboard_scores.score, EXCLUDED.score),
+          updated_at = CASE
+            WHEN EXCLUDED.score > leaderboard_scores.score THEN NOW()
+            ELSE leaderboard_scores.updated_at
+          END
+        RETURNING id, student_id, name, score, updated_at AS created_at
+      `;
+      return { row: rows[0], isNewBest: score > previousBest };
+    });
+    if (!saved.row) throw new Error("Saved score was not returned");
+    return json({ entry: serializeRow(saved.row), isNewBest: saved.isNewBest });
   } catch (error) {
     console.error("Leaderboard API error", error);
     return json({ error: "리더보드 서버에 연결하지 못했습니다." }, 503);
