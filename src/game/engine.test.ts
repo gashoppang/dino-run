@@ -139,6 +139,20 @@ describe("game engine", () => {
     expect(state.obstacles[0]?.y).toBe(expectedY);
   });
 
+  it("does not spawn a high bird while wings are active", () => {
+    const state = createGameState();
+    startGame(state);
+    state.distance = 1200;
+    state.effects.wings = 10;
+    state.spawnTimer = 0;
+    const rolls = [0.9, 0.1, 0.5];
+
+    tickGame(state, 1 / 60, () => rolls.shift() ?? 0.5);
+
+    expect(state.obstacles[0]?.kind).toBe("bird-low");
+    expect(state.obstacles[0]?.y).toBe(GROUND_Y - 80);
+  });
+
   it("mixes tight, normal, and breather obstacle gaps", () => {
     const spawnWithCadence = (cadenceRoll: number): number => {
       const state = createGameState();

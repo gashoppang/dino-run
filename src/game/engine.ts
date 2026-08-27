@@ -261,7 +261,7 @@ function spawnObstacle(state: GameState, random: () => number): void {
 
   const spawnBird = state.score > 75 && random() > 0.62;
   const kind: ObstacleKind = spawnBird
-    ? random() < 0.5
+    ? random() < 0.5 && state.effects.wings <= 0
       ? "bird-high"
       : "bird-low"
     : cactusKinds[Math.min(cactusKinds.length - 1, Math.floor(random() * cactusKinds.length))]!;
