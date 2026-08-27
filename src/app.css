@@ -295,7 +295,7 @@ a { color: inherit; }
 .subpage-header { max-width: 900px; }
 .subpage-header h1 { font-size: clamp(3.5rem, 8vw, 7rem); }
 .leaderboard-view { padding-top: clamp(70px, 8vw, 96px); }
-.leaderboard-view .subpage-header h1 { font-size: clamp(2.5rem, 4.5vw, 4rem); }
+.leaderboard-view .subpage-header h1 { font-size: clamp(2.8rem, 5vw, 4.5rem); }
 .leaderboard-board { max-width: 1120px; margin: clamp(24px, 3.5vw, 42px) auto 0; }
 .podium-list {
   display: grid;
