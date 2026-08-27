@@ -359,7 +359,7 @@ a { color: inherit; }
 .score-row { min-height: 110px; grid-template-columns: 82px 1fr auto; gap: 28px; }
 .leaderboard-list .score-row { border-top: 0; border-bottom: 1px solid rgba(255, 231, 181, .17); }
 .score-row:last-child, .setting-row:last-child { border-bottom: 1px solid rgba(255, 231, 181, .17); }
-.score-row .rank { color: rgba(255, 231, 181, .4); font: 700 1.1rem/1 ui-monospace, SFMono-Regular, Consolas, monospace; }
+.score-row .rank { color: rgba(255, 240, 204, .84); font: 800 1.35rem/1 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .05em; }
 .score-row b { font-size: 1.7rem; }
 .score-name { display: grid; gap: 8px; }
 .score-name small {
@@ -425,7 +425,7 @@ a { color: inherit; }
   .podium-name b { font-size: 1.2rem; }
   .podium-name small { font-size: .8rem; }
   .podium-card strong { font-size: 1.7rem; }
-  .score-row .rank { font-size: .95rem; }
+  .score-row .rank { font-size: 1.15rem; }
   .score-row b { font-size: 1.45rem; }
   .score-name small { font-size: .9rem; }
   .score-row strong { font-size: 1.8rem; }
