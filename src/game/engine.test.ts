@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   GROUND_Y,
+  applySpeedBoost,
   createGameState,
   jump,
   pauseGame,
@@ -9,6 +10,7 @@ import {
   setDucking,
   setViewportWidth,
   startGame,
+  takeCollectedItems,
   tickGame,
 } from "./engine";
 
@@ -182,6 +184,102 @@ describe("game engine", () => {
     tickGame(state, 1 / 60, () => 0.5);
     expect(state.phase).toBe("gameOver");
     expect(state.bestScore).toBeGreaterThanOrEqual(8);
+  });
+
+  it("collects a shield and survives a collision for 8 seconds", () => {
+    const state = createGameState();
+    startGame(state);
+    state.itemSpawnTimer = 100;
+    state.items.push({
+      id: 1,
+      kind: "shield",
+      x: state.runner.x + 12,
+      y: state.runner.y + 12,
+      width: 42,
+      height: 42,
+    });
+    state.obstacles.push({
+      id: 1,
+      kind: "cactus-large",
+      x: state.runner.x + 12,
+      y: state.runner.y + 8,
+      width: 48,
+      height: 82,
+    });
+
+    tickGame(state, 1 / 60, () => 0.5);
+
+    expect(state.phase).toBe("running");
+    expect(state.effects.shield).toBe(8);
+    expect(state.items).toHaveLength(0);
+    expect(state.obstacles).toHaveLength(0);
+    expect(takeCollectedItems(state)).toEqual(["shield"]);
+  });
+
+  it("destroys collided obstacles while giant", () => {
+    const state = createGameState();
+    startGame(state);
+    state.effects.giant = 10;
+    state.obstacles.push({
+      id: 1,
+      kind: "cactus-small",
+      x: state.runner.x + state.runner.width - 6,
+      y: GROUND_Y - 50,
+      width: 34,
+      height: 50,
+    });
+
+    tickGame(state, 1 / 60, () => 0.5);
+
+    expect(state.phase).toBe("running");
+    expect(state.obstacles).toHaveLength(0);
+  });
+
+  it("boosts speed and increases the next obstacle gap", () => {
+    const state = createGameState();
+    startGame(state);
+    applySpeedBoost(state);
+    state.spawnTimer = 0;
+    tickGame(state, 1 / 60, () => 0.5);
+
+    expect(state.effects.speed).toBeGreaterThan(6.9);
+    expect(state.speed).toBeGreaterThan(340);
+    expect(state.spawnTimer).toBeGreaterThan(1.7);
+  });
+
+  it("queues the rival speed item without boosting its collector", () => {
+    const state = createGameState();
+    startGame(state);
+    state.itemSpawnTimer = 100;
+    state.items.push({
+      id: 1,
+      kind: "speed-rival",
+      x: state.runner.x + 10,
+      y: state.runner.y + 10,
+      width: 42,
+      height: 42,
+    });
+
+    tickGame(state, 1 / 60, () => 0.5);
+
+    expect(state.effects.speed).toBe(0);
+    expect(takeCollectedItems(state)).toEqual(["speed-rival"]);
+  });
+
+  it("gives super jump extra height and lets wings flap in mid-air", () => {
+    const superState = createGameState();
+    startGame(superState);
+    superState.effects.superJump = 10;
+    jump(superState);
+    expect(superState.runner.velocityY).toBeLessThan(-1000);
+
+    const wingState = createGameState();
+    startGame(wingState);
+    wingState.effects.wings = 10;
+    wingState.runner.grounded = false;
+    wingState.runner.velocityY = 100;
+    expect(jump(wingState)).toBe(true);
+    expect(wingState.runner.velocityY).toBeLessThan(-400);
   });
 
   it("does not advance while paused", () => {

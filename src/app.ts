@@ -1,5 +1,6 @@
 import "./app.css";
 import {
+  applySpeedBoost,
   createGameState,
   formatScore,
   jump,
@@ -9,8 +10,10 @@ import {
   setDucking,
   setViewportWidth,
   startGame,
+  takeCollectedItems,
   tickGame,
   type GameState,
+  type ItemKind,
 } from "./game/engine";
 import { createCanvasRenderer } from "./game/canvasRenderer";
 import {
@@ -38,6 +41,9 @@ interface PlayerController {
   stage: HTMLElement;
   score: HTMLElement;
   speed: HTMLElement;
+  itemHud: HTMLElement;
+  pickupToast: HTMLElement;
+  toastTimer: number | undefined;
   overlay: HTMLElement;
   overlayTitle: HTMLElement;
   overlayCopy: HTMLElement;
@@ -138,6 +144,8 @@ function playerMarkup(player: PlayerId): string {
         <div class="hud-item"><span>거리</span><strong data-score>00000</strong></div>
         <div class="speed-chip"><i></i><span data-speed>34</span> KM/H</div>
       </div>
+      <div class="item-hud" data-item-hud aria-label="활성 아이템" aria-live="polite"></div>
+      <div class="pickup-toast" data-pickup-toast aria-live="polite"></div>
       <div class="game-overlay" data-overlay>
         <h2 data-overlay-title>00000점</h2>
         <p data-overlay-copy></p>
@@ -168,6 +176,9 @@ function createPlayerController(player: PlayerId): PlayerController {
     stage,
     score: requireElement("[data-score]", stage),
     speed: requireElement("[data-speed]", stage),
+    itemHud: requireElement("[data-item-hud]", stage),
+    pickupToast: requireElement("[data-pickup-toast]", stage),
+    toastTimer: undefined,
     overlay: requireElement("[data-overlay]", stage),
     overlayTitle: requireElement("[data-overlay-title]", stage),
     overlayCopy: requireElement("[data-overlay-copy]", stage),
@@ -185,6 +196,19 @@ function updatePlayerInterface(player: PlayerController): void {
   player.speed.textContent = String(Math.round(state.speed / 10));
   player.stage.dataset.phase = state.phase;
   player.overlay.classList.toggle("is-visible", state.phase === "gameOver");
+  const activeItems = [
+    ["shield", "보호막"],
+    ["giant", "거대화"],
+    ["speed", "속도"],
+    ["superJump", "슈퍼점프"],
+    ["wings", "날개"],
+  ] as const;
+  const itemMarkup = activeItems
+    .filter(([key]) => state.effects[key] > 0)
+    .map(([key, label]) => `<span data-effect="${key}"><b>${label}</b>${Math.ceil(state.effects[key])}</span>`)
+    .join("");
+  if (player.itemHud.innerHTML !== itemMarkup) player.itemHud.innerHTML = itemMarkup;
+  player.itemHud.hidden = itemMarkup.length === 0;
 
   if (state.phase === "gameOver") {
     player.overlayTitle.textContent = `${state.score}점`;
@@ -192,6 +216,24 @@ function updatePlayerInterface(player: PlayerController): void {
       ? `${player.name}님의 신기록입니다`
       : `${player.studentId} ${player.name}의 최고기록 ${state.bestScore}점`;
   }
+}
+
+const ITEM_MESSAGES: Record<Exclude<ItemKind, "speed-rival">, string> = {
+  shield: "보호막 · 8초 무적",
+  giant: "거대화 · 장애물 파괴",
+  "speed-self": "속도 강화 · 간격 증가",
+  "super-jump": "슈퍼점프",
+  wings: "날개 · 점프로 비행",
+};
+
+function showPickupToast(player: PlayerController, message: string): void {
+  if (player.toastTimer !== undefined) window.clearTimeout(player.toastTimer);
+  player.pickupToast.textContent = message;
+  player.pickupToast.classList.add("is-visible");
+  player.toastTimer = window.setTimeout(() => {
+    player.pickupToast.classList.remove("is-visible");
+    player.toastTimer = undefined;
+  }, 1800);
 }
 
 function requestJump(player: PlayerController): void {
@@ -388,6 +430,16 @@ function mountGame(): () => void {
     previousTime = now;
     for (const player of players) {
       tickGame(player.state, deltaSeconds);
+      for (const item of takeCollectedItems(player.state)) {
+        if (item === "speed-rival") {
+          const rival = players.find(({ id }) => id !== player.id)!;
+          applySpeedBoost(rival.state);
+          showPickupToast(player, "상대 속도 강화");
+          showPickupToast(rival, "상대가 속도를 올렸습니다");
+        } else {
+          showPickupToast(player, ITEM_MESSAGES[item]);
+        }
+      }
       recordFinishedScore(player);
       updatePlayerInterface(player);
       player.render(player.state);
@@ -475,6 +527,9 @@ function mountGame(): () => void {
     window.removeEventListener("keydown", handleKeyDown);
     window.removeEventListener("keyup", handleKeyUp);
     document.removeEventListener("visibilitychange", handleVisibility);
+    players.forEach((player) => {
+      if (player.toastTimer !== undefined) window.clearTimeout(player.toastTimer);
+    });
   };
 }
 

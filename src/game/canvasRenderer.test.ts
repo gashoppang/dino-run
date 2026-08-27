@@ -1,12 +1,17 @@
 import { describe, expect, it, vi } from "vitest";
-import { drawObstacle, getViewportMetrics } from "./canvasRenderer";
-import type { ObstacleState } from "./engine";
+import { drawItem, drawObstacle, getViewportMetrics } from "./canvasRenderer";
+import type { ItemState, ObstacleState } from "./engine";
 
 function createContextMock(): CanvasRenderingContext2D {
   return {
     save: vi.fn(),
     restore: vi.fn(),
     translate: vi.fn(),
+    beginPath: vi.fn(),
+    moveTo: vi.fn(),
+    lineTo: vi.fn(),
+    closePath: vi.fn(),
+    fill: vi.fn(),
     fillRect: vi.fn(),
     fillStyle: "",
     shadowColor: "",
@@ -53,6 +58,25 @@ describe("standard canvas obstacle renderer", () => {
     expect(context.save).toHaveBeenCalledOnce();
     expect(context.translate).toHaveBeenCalledWith(600, obstacle.y);
     expect(context.fillRect).toHaveBeenCalledTimes(minimumParts);
+    expect(context.restore).toHaveBeenCalledOnce();
+  });
+
+  it.each([
+    "shield",
+    "giant",
+    "speed-self",
+    "speed-rival",
+    "super-jump",
+    "wings",
+  ] as const)("draws a visible %s pickup", (kind) => {
+    const context = createContextMock();
+    const item: ItemState = { id: 1, kind, x: 640, y: 300, width: 42, height: 42 };
+
+    drawItem(context, item, 0.2);
+
+    expect(context.save).toHaveBeenCalledOnce();
+    expect(context.translate).toHaveBeenCalledOnce();
+    expect(context.fill).toHaveBeenCalled();
     expect(context.restore).toHaveBeenCalledOnce();
   });
 });

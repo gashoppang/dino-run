@@ -172,6 +172,55 @@ a { color: inherit; }
   letter-spacing: .05em;
 }
 .speed-chip i { width: 5px; height: 5px; border-radius: 50%; background: #61bbaa; box-shadow: 0 0 9px #61bbaa; }
+.item-hud {
+  position: absolute;
+  z-index: 3;
+  top: 62px;
+  left: clamp(80px, 7vw, 120px);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  max-width: min(56vw, 620px);
+  pointer-events: none;
+}
+.item-hud[hidden] { display: none; }
+.item-hud span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 25px;
+  padding: 0 8px;
+  border: 1px solid rgba(255, 231, 181, .26);
+  color: #fff0c9;
+  background: rgba(10, 29, 36, .72);
+  font: 800 .58rem/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+  backdrop-filter: blur(5px);
+}
+.item-hud span::before { content: ""; width: 6px; height: 6px; background: #ffe7b5; transform: rotate(45deg); }
+.item-hud span[data-effect="shield"]::before { background: #6ce7df; box-shadow: 0 0 8px #6ce7df; }
+.item-hud span[data-effect="giant"]::before { background: #ffbd5c; }
+.item-hud span[data-effect="speed"]::before { background: #55bfff; box-shadow: 0 0 8px #55bfff; }
+.item-hud span[data-effect="superJump"]::before { background: #d995ff; }
+.item-hud span[data-effect="wings"]::before { background: #fff1c4; }
+.item-hud b { font: inherit; }
+.pickup-toast {
+  position: absolute;
+  z-index: 6;
+  top: 28%;
+  left: 50%;
+  padding: 9px 13px;
+  border: 1px solid rgba(255, 231, 181, .36);
+  color: #fff0c9;
+  background: rgba(9, 27, 34, .88);
+  font-size: clamp(.66rem, 1.2vw, .82rem);
+  font-weight: 800;
+  transform: translate(-50%, 8px);
+  opacity: 0;
+  pointer-events: none;
+  backdrop-filter: blur(7px);
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+.pickup-toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
 .game-overlay {
   position: absolute;
   z-index: 5;
@@ -413,6 +462,8 @@ a { color: inherit; }
   .home-link { top: 9px; left: 9px; }
   .player-badge { top: 12px; left: 70px; }
   .hud { top: 10px; right: 9px; gap: 9px; }
+  .item-hud { top: 47px; left: 70px; max-width: calc(100% - 180px); }
+  .item-hud span { min-height: 21px; padding-inline: 6px; font-size: .5rem; }
   .speed-chip { display: none; }
   .game-overlay { width: min(310px, calc(100% - 110px)); padding: 12px 14px; }
   .game-overlay p { margin-top: 3px; }
@@ -434,6 +485,7 @@ a { color: inherit; }
   .game-view, .split-arena { min-height: 520px; }
   .player-badge { top: 9px; }
   .hud { top: 8px; }
+  .item-hud { top: 42px; }
   .game-overlay { padding-block: 10px; }
   .game-overlay p { margin-block: 2px 7px; }
   .mobile-controls { bottom: 6px; }

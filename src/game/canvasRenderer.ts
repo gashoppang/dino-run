@@ -2,6 +2,7 @@ import {
   GROUND_Y,
   WORLD_HEIGHT,
   type GameState,
+  type ItemState,
   type ObstacleState,
 } from "./engine";
 
@@ -160,6 +161,25 @@ function drawRunner(context: CanvasRenderingContext2D, state: GameState): void {
   const frame = Math.floor(state.elapsed * 11) % 2;
   context.save();
   context.translate(Math.round(runner.x), Math.round(runner.y));
+  if (state.effects.giant > 0) {
+    context.translate(runner.width / 2, runner.height);
+    context.scale(1.38, 1.38);
+    context.translate(-runner.width / 2, -runner.height);
+  }
+
+  if (state.effects.speed > 0) {
+    context.fillStyle = "rgba(83, 194, 255, 0.24)";
+    const streak = (state.elapsed * 120) % 28;
+    context.fillRect(-62 - streak, 24, 54, 5);
+    context.fillRect(-42 - streak, 52, 34, 4);
+  }
+
+  if (state.effects.wings > 0) {
+    const wingLift = Math.floor(state.elapsed * 9) % 2 === 0 ? -10 : 5;
+    context.fillStyle = "rgba(255, 244, 207, 0.92)";
+    polygon(context, [[17, 36], [-19, 8 + wingLift], [-8, 43], [15, 59]], "rgba(255, 244, 207, 0.92)");
+    polygon(context, [[48, 37], [88, 10 + wingLift], [75, 45], [51, 59]], "rgba(255, 244, 207, 0.92)");
+  }
   context.fillStyle = COLORS.ink;
   context.shadowColor = "rgba(10, 24, 31, 0.28)";
   context.shadowBlur = 0;
@@ -188,6 +208,61 @@ function drawRunner(context: CanvasRenderingContext2D, state: GameState): void {
     context.fillStyle = COLORS.cream;
     context.fillRect(56, 9, 5, 5);
     context.fillRect(57, 25, 11, 3);
+  }
+
+  if (state.effects.superJump > 0) {
+    context.fillStyle = "rgba(216, 153, 255, 0.56)";
+    context.fillRect(18, runner.height + 5, 36, 5);
+    context.fillRect(27, runner.height + 13, 18, 4);
+  }
+
+  if (state.effects.shield > 0) {
+    context.beginPath();
+    context.arc(runner.width / 2, runner.height / 2, 54, 0, Math.PI * 2);
+    context.fillStyle = "rgba(91, 225, 226, 0.12)";
+    context.fill();
+    context.strokeStyle = "rgba(144, 255, 243, 0.86)";
+    context.lineWidth = 4;
+    context.stroke();
+  }
+  context.restore();
+}
+
+const ITEM_COLORS: Record<ItemState["kind"], string> = {
+  shield: "#6ce7df",
+  giant: "#ffbd5c",
+  "speed-self": "#55bfff",
+  "speed-rival": "#ff5e69",
+  "super-jump": "#d995ff",
+  wings: "#fff1c4",
+};
+
+export function drawItem(
+  context: CanvasRenderingContext2D,
+  item: ItemState,
+  elapsed: number,
+): void {
+  const bob = Math.sin(elapsed * 5 + item.id) * 6;
+  const center = item.width / 2;
+  context.save();
+  context.translate(Math.round(item.x), Math.round(item.y + bob));
+  context.fillStyle = "rgba(11, 29, 37, 0.45)";
+  context.fillRect(4, 7, item.width, item.height);
+  polygon(context, [[center, 0], [item.width, center], [center, item.height], [0, center]], ITEM_COLORS[item.kind]);
+  context.fillStyle = "rgba(18, 43, 52, 0.9)";
+
+  if (item.kind === "shield") {
+    polygon(context, [[center, 9], [33, 14], [30, 29], [center, 35], [12, 29], [9, 14]], "rgba(18, 43, 52, 0.9)");
+  } else if (item.kind === "giant") {
+    context.fillRect(10, 17, 22, 10);
+    context.fillRect(16, 11, 10, 22);
+  } else if (item.kind === "speed-self" || item.kind === "speed-rival") {
+    polygon(context, [[25, 8], [12, 23], [21, 23], [16, 35], [32, 18], [23, 18]], "rgba(18, 43, 52, 0.9)");
+  } else if (item.kind === "super-jump") {
+    polygon(context, [[21, 7], [34, 22], [27, 22], [27, 34], [15, 34], [15, 22], [8, 22]], "rgba(18, 43, 52, 0.9)");
+  } else {
+    polygon(context, [[21, 28], [8, 13], [9, 29], [21, 35]], "rgba(18, 43, 52, 0.9)");
+    polygon(context, [[21, 28], [34, 13], [33, 29], [21, 35]], "rgba(18, 43, 52, 0.9)");
   }
   context.restore();
 }
@@ -297,6 +372,7 @@ export function renderGame(
   drawGround(context, state, viewportWidth);
   drawSpeedLines(context, state, viewportWidth);
   drawDust(context, state);
+  for (const item of state.items) drawItem(context, item, state.elapsed);
   drawRunner(context, state);
   for (const obstacle of state.obstacles) drawObstacle(context, obstacle, state.elapsed);
   drawVignette(context, viewportWidth);
