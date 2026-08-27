@@ -139,7 +139,27 @@ describe("game engine", () => {
     expect(state.obstacles[0]?.y).toBe(expectedY);
   });
 
-  it("does not spawn a high bird while wings are active", () => {
+  it("does not spawn a bird behind a wings item on the field", () => {
+    const state = createGameState();
+    startGame(state);
+    state.distance = 1200;
+    state.spawnTimer = 0;
+    state.items.push({
+      id: 1,
+      kind: "wings",
+      x: 400,
+      y: GROUND_Y - 88,
+      width: 42,
+      height: 42,
+    });
+    const rolls = [0.9, 0.1, 0.5];
+
+    tickGame(state, 1 / 60, () => rolls.shift() ?? 0.5);
+
+    expect(state.obstacles[0]?.kind).toBe("cactus-small");
+  });
+
+  it("allows high birds again after the wings item is collected", () => {
     const state = createGameState();
     startGame(state);
     state.distance = 1200;
@@ -149,8 +169,7 @@ describe("game engine", () => {
 
     tickGame(state, 1 / 60, () => rolls.shift() ?? 0.5);
 
-    expect(state.obstacles[0]?.kind).toBe("bird-low");
-    expect(state.obstacles[0]?.y).toBe(GROUND_Y - 80);
+    expect(state.obstacles[0]?.kind).toBe("bird-high");
   });
 
   it("mixes tight, normal, and breather obstacle gaps", () => {
