@@ -1,4 +1,5 @@
 import postgres from "postgres";
+import { prepareDatabaseUrl } from "../src/databaseUrl";
 
 const MAX_STUDENT_ID_LENGTH = 16;
 const MAX_NAME_LENGTH = 12;
@@ -19,7 +20,7 @@ let sql: Sql | undefined;
 function getSql(): Sql {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) throw new Error("DATABASE_URL is not configured");
-  sql ??= postgres(databaseUrl, {
+  sql ??= postgres(prepareDatabaseUrl(databaseUrl), {
     max: 3,
     idle_timeout: 20,
     connect_timeout: 10,
