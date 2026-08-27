@@ -1,5 +1,4 @@
 import postgres from "postgres";
-import { prepareDatabaseUrl } from "../src/databaseUrl";
 
 const MAX_STUDENT_ID_LENGTH = 16;
 const MAX_NAME_LENGTH = 12;
@@ -16,6 +15,12 @@ interface ScoreRow {
 }
 
 let sql: Sql | undefined;
+
+function prepareDatabaseUrl(value: string): string {
+  const url = new URL(value);
+  url.searchParams.delete("sslrootcert");
+  return url.toString();
+}
 
 function getSql(): Sql {
   const databaseUrl = process.env.DATABASE_URL;
