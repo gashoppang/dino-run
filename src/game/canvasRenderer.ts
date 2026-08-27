@@ -146,6 +146,104 @@ function drawDust(context: CanvasRenderingContext2D, state: GameState): void {
   }
 }
 
+function drawStandingDino(context: CanvasRenderingContext2D, frame: number): void {
+  polygon(context, [
+    [0, 34], [10, 32], [20, 27], [29, 31], [27, 42], [17, 46], [7, 42], [0, 39],
+  ], COLORS.ink);
+  polygon(context, [
+    [13, 30], [27, 25], [39, 29], [47, 39], [45, 53], [37, 61], [22, 62],
+    [11, 55], [7, 43],
+  ], COLORS.ink);
+  polygon(context, [
+    [29, 29], [34, 11], [45, 8], [52, 19], [49, 38], [40, 45], [31, 38],
+  ], COLORS.ink);
+  polygon(context, [
+    [35, 5], [41, 1], [59, 1], [66, 6], [68, 11], [68, 21], [63, 25],
+    [48, 25], [46, 30], [35, 29], [32, 21],
+  ], COLORS.ink);
+  context.fillStyle = COLORS.ink;
+  context.fillRect(47, 22, 21, 9);
+
+  context.fillStyle = COLORS.tealDark;
+  context.fillRect(18, 37, 16, 6);
+  context.fillRect(24, 45, 14, 5);
+  context.fillRect(36, 16, 7, 12);
+  context.fillRect(40, 6, 8, 4);
+
+  context.fillStyle = COLORS.ink;
+  context.fillRect(40, 36, 15, 5);
+  context.fillRect(51, 40, 7, 4);
+  context.fillRect(54, 44, 4, 3);
+  context.fillRect(49, 44, 3, 3);
+
+  if (frame === 0) {
+    context.fillRect(19, 56, 13, 20);
+    context.fillRect(17, 75, 20, 7);
+    context.fillRect(37, 58, 11, 14);
+    context.fillRect(40, 69, 8, 9);
+    context.fillRect(39, 77, 17, 5);
+  } else {
+    context.fillRect(21, 58, 11, 14);
+    context.fillRect(20, 69, 8, 9);
+    context.fillRect(14, 77, 17, 5);
+    context.fillRect(36, 56, 13, 20);
+    context.fillRect(35, 75, 20, 7);
+  }
+
+  context.fillStyle = COLORS.cream;
+  context.fillRect(53, 8, 6, 6);
+  context.fillRect(63, 15, 3, 3);
+  context.fillRect(52, 22, 16, 2);
+  context.fillRect(54, 24, 3, 4);
+  context.fillRect(62, 24, 3, 4);
+  context.fillStyle = COLORS.ink;
+  context.fillRect(56, 10, 3, 3);
+}
+
+function drawDuckingDino(context: CanvasRenderingContext2D, frame: number): void {
+  polygon(context, [
+    [0, 18], [11, 16], [20, 12], [29, 15], [27, 27], [17, 32], [7, 28], [0, 24],
+  ], COLORS.ink);
+  polygon(context, [
+    [11, 16], [26, 10], [42, 13], [49, 22], [44, 34], [29, 38], [14, 34], [7, 27],
+  ], COLORS.ink);
+  polygon(context, [
+    [33, 8], [42, 3], [59, 3], [66, 7], [68, 12], [68, 21], [62, 25],
+    [48, 25], [45, 30], [34, 28], [31, 18],
+  ], COLORS.ink);
+  context.fillStyle = COLORS.ink;
+  context.fillRect(47, 22, 21, 8);
+
+  context.fillStyle = COLORS.tealDark;
+  context.fillRect(17, 19, 17, 6);
+  context.fillRect(34, 12, 8, 9);
+  context.fillRect(42, 7, 7, 4);
+
+  context.fillStyle = COLORS.ink;
+  context.fillRect(37, 29, 14, 4);
+  context.fillRect(48, 32, 7, 4);
+  if (frame === 0) {
+    context.fillRect(16, 33, 12, 10);
+    context.fillRect(13, 41, 19, 7);
+    context.fillRect(35, 34, 10, 8);
+    context.fillRect(35, 41, 16, 7);
+  } else {
+    context.fillRect(18, 34, 10, 8);
+    context.fillRect(12, 41, 16, 7);
+    context.fillRect(34, 33, 12, 10);
+    context.fillRect(32, 41, 19, 7);
+  }
+
+  context.fillStyle = COLORS.cream;
+  context.fillRect(53, 9, 6, 6);
+  context.fillRect(63, 16, 3, 3);
+  context.fillRect(52, 22, 16, 2);
+  context.fillRect(55, 24, 3, 4);
+  context.fillRect(62, 24, 3, 4);
+  context.fillStyle = COLORS.ink;
+  context.fillRect(56, 11, 3, 3);
+}
+
 function drawRunner(context: CanvasRenderingContext2D, state: GameState): void {
   const runner = state.runner;
   const frame = Math.floor(state.elapsed * 11) % 2;
@@ -179,29 +277,8 @@ function drawRunner(context: CanvasRenderingContext2D, state: GameState): void {
   context.shadowOffsetX = 5;
   context.shadowOffsetY = 5;
 
-  if (runner.ducking) {
-    context.fillRect(10, 14, 43, 25);
-    context.fillRect(38, 5, 30, 25);
-    context.fillRect(0, 18, 23, 12);
-    context.fillRect(54, 29, 14, 5);
-    context.fillRect(frame === 0 ? 17 : 25, 38, 10, 10);
-    context.fillRect(frame === 0 ? 39 : 31, 38, 10, 10);
-    context.fillStyle = COLORS.cream;
-    context.fillRect(57, 11, 5, 5);
-  } else {
-    context.fillRect(22, 29, 37, 38);
-    context.fillRect(34, 2, 32, 32);
-    context.fillRect(52, 27, 16, 8);
-    context.fillRect(8, 38, 26, 13);
-    context.fillRect(0, 31, 15, 10);
-    context.fillRect(49, 44, 18, 7);
-    context.fillRect(60, 49, 8, 7);
-    context.fillRect(frame === 0 ? 26 : 39, 64, 11, frame === 0 ? 18 : 12);
-    context.fillRect(frame === 0 ? 44 : 27, 64, 11, frame === 0 ? 12 : 18);
-    context.fillStyle = COLORS.cream;
-    context.fillRect(56, 9, 5, 5);
-    context.fillRect(57, 25, 11, 3);
-  }
+  if (runner.ducking) drawDuckingDino(context, frame);
+  else drawStandingDino(context, frame);
 
   if (state.effects.shield > 0) {
     context.beginPath();
