@@ -200,7 +200,6 @@ function updatePlayerInterface(player: PlayerController): void {
     ["shield", "보호막"],
     ["giant", "거대화"],
     ["speed", "속도"],
-    ["superJump", "슈퍼점프"],
     ["wings", "날개"],
   ] as const;
   const itemMarkup = activeItems
@@ -222,7 +221,6 @@ const ITEM_MESSAGES: Record<Exclude<ItemKind, "speed-rival">, string> = {
   shield: "보호막 · 8초 무적",
   giant: "거대화 · 장애물 파괴",
   "speed-self": "속도 강화 · 간격 증가",
-  "super-jump": "슈퍼점프",
   wings: "날개 · 점프로 비행",
 };
 

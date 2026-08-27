@@ -72,7 +72,6 @@ describe("standard canvas obstacle renderer", () => {
     "giant",
     "speed-self",
     "speed-rival",
-    "super-jump",
     "wings",
   ] as const)("draws a visible %s pickup", (kind) => {
     const context = createContextMock();

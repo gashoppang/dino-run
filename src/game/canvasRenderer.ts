@@ -211,12 +211,6 @@ function drawRunner(context: CanvasRenderingContext2D, state: GameState): void {
     context.fillRect(57, 25, 11, 3);
   }
 
-  if (state.effects.superJump > 0) {
-    context.fillStyle = "rgba(216, 153, 255, 0.56)";
-    context.fillRect(18, runner.height + 5, 36, 5);
-    context.fillRect(27, runner.height + 13, 18, 4);
-  }
-
   if (state.effects.shield > 0) {
     context.beginPath();
     context.arc(runner.width / 2, runner.height / 2, 54, 0, Math.PI * 2);
@@ -234,7 +228,6 @@ const ITEM_COLORS: Record<ItemState["kind"], string> = {
   giant: "#ffbd5c",
   "speed-self": "#55bfff",
   "speed-rival": "#ff5e69",
-  "super-jump": "#d995ff",
   wings: "#fff1c4",
 };
 
@@ -278,10 +271,6 @@ export function drawItem(
     context.fillRect(27, 11, 5, 3);
     context.fillRect(11, 29, 5, 3);
     context.fillRect(27, 29, 5, 3);
-  } else if (item.kind === "super-jump") {
-    context.fillRect(7, 34, 28, 4);
-    context.fillRect(12, 29, 18, 3);
-    polygon(context, [[21, 5], [34, 19], [27, 19], [27, 27], [15, 27], [15, 19], [8, 19]], iconColor);
   } else {
     context.fillRect(19, 17, 5, 18);
     polygon(context, [[19, 19], [9, 7], [4, 10], [9, 17], [3, 16], [8, 24], [4, 25], [13, 34], [19, 31]], iconColor);

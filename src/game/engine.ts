@@ -15,7 +15,6 @@ export type ItemKind =
   | "giant"
   | "speed-self"
   | "speed-rival"
-  | "super-jump"
   | "wings";
 
 export interface RunnerState {
@@ -58,7 +57,6 @@ export interface TimedEffects {
   shield: number;
   giant: number;
   speed: number;
-  superJump: number;
   wings: number;
 }
 
@@ -89,7 +87,6 @@ const RUNNER_HEIGHT = 82;
 const DUCK_HEIGHT = 48;
 const GRAVITY = 2250;
 const JUMP_VELOCITY = -810;
-const SUPER_JUMP_VELOCITY = -1030;
 const WING_FLAP_VELOCITY = -470;
 const STARTING_SPEED = 340;
 const MAX_SPEED = 720;
@@ -102,12 +99,14 @@ const WEIGHTED_ITEM_KINDS: ItemKind[] = [
   "shield",
   "giant",
   "giant",
+  "giant",
+  "speed-self",
   "speed-self",
   "speed-self",
   "speed-rival",
   "speed-rival",
-  "super-jump",
-  "super-jump",
+  "speed-rival",
+  "wings",
   "wings",
   "wings",
 ];
@@ -140,7 +139,7 @@ export function createGameState(bestScore = 0): GameState {
     obstacles: [],
     items: [],
     destructionEffects: [],
-    effects: { shield: 0, giant: 0, speed: 0, superJump: 0, wings: 0 },
+    effects: { shield: 0, giant: 0, speed: 0, wings: 0 },
     collectedItems: [],
     score: 0,
     bestScore,
@@ -200,9 +199,7 @@ export function jump(state: GameState): boolean {
   state.runner.ducking = false;
   state.runner.height = RUNNER_HEIGHT;
   state.runner.y = GROUND_Y - RUNNER_HEIGHT;
-  state.runner.velocityY = state.effects.superJump > 0
-    ? SUPER_JUMP_VELOCITY
-    : JUMP_VELOCITY;
+  state.runner.velocityY = JUMP_VELOCITY;
   state.runner.grounded = false;
   return true;
 }
@@ -347,7 +344,6 @@ function collectItem(state: GameState, kind: ItemKind): void {
   if (kind === "shield") state.effects.shield = 8;
   else if (kind === "giant") state.effects.giant = 10;
   else if (kind === "speed-self") applySpeedBoost(state);
-  else if (kind === "super-jump") state.effects.superJump = 10;
   else if (kind === "wings") {
     state.effects.wings = 10;
     state.runner.ducking = false;
@@ -374,11 +370,7 @@ export function tickGame(
   updateEffects(state, dt);
 
   if (!state.runner.grounded) {
-    const gravity = state.effects.wings > 0
-      ? 760
-      : state.effects.superJump > 0
-        ? 1800
-        : GRAVITY;
+    const gravity = state.effects.wings > 0 ? 760 : GRAVITY;
     state.runner.velocityY += gravity * dt;
     state.runner.y += state.runner.velocityY * dt;
     state.runner.y = Math.max(46, state.runner.y);

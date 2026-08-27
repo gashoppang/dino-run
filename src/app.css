@@ -200,7 +200,6 @@ a { color: inherit; }
 .item-hud span[data-effect="shield"]::before { background: #6ce7df; box-shadow: 0 0 8px #6ce7df; }
 .item-hud span[data-effect="giant"]::before { background: #ffbd5c; }
 .item-hud span[data-effect="speed"]::before { background: #55bfff; box-shadow: 0 0 8px #55bfff; }
-.item-hud span[data-effect="superJump"]::before { background: #d995ff; }
 .item-hud span[data-effect="wings"]::before { background: #fff1c4; }
 .item-hud b { font: inherit; }
 .pickup-toast {

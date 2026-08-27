@@ -183,23 +183,22 @@ describe("game engine", () => {
 
   it("makes shields rarer than every other item", () => {
     const counts = new Map<string, number>();
-    for (let slot = 0; slot < 11; slot += 1) {
+    for (let slot = 0; slot < 13; slot += 1) {
       const state = createGameState();
       startGame(state);
       state.spawnTimer = 100;
       state.itemSpawnTimer = 0;
-      const rolls = [(slot + 0.5) / 11, 0.5, 0.5];
+      const rolls = [(slot + 0.5) / 13, 0.5, 0.5];
       tickGame(state, 1 / 60, () => rolls.shift() ?? 0.5);
       const kind = state.items[0]!.kind;
       counts.set(kind, (counts.get(kind) ?? 0) + 1);
     }
 
     expect(counts.get("shield")).toBe(1);
-    expect(counts.get("giant")).toBe(2);
-    expect(counts.get("speed-self")).toBe(2);
-    expect(counts.get("speed-rival")).toBe(2);
-    expect(counts.get("super-jump")).toBe(2);
-    expect(counts.get("wings")).toBe(2);
+    expect(counts.get("giant")).toBe(3);
+    expect(counts.get("speed-self")).toBe(3);
+    expect(counts.get("speed-rival")).toBe(3);
+    expect(counts.get("wings")).toBe(3);
   });
 
   it("defers an item until it has a safe gap from an obstacle", () => {
@@ -351,13 +350,7 @@ describe("game engine", () => {
     expect(takeCollectedItems(state)).toEqual(["speed-rival"]);
   });
 
-  it("gives super jump extra height and lets wings flap in mid-air", () => {
-    const superState = createGameState();
-    startGame(superState);
-    superState.effects.superJump = 10;
-    jump(superState);
-    expect(superState.runner.velocityY).toBeLessThan(-1000);
-
+  it("lets wings flap in mid-air", () => {
     const wingState = createGameState();
     startGame(wingState);
     wingState.effects.wings = 10;
