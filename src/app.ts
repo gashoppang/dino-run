@@ -484,9 +484,7 @@ function renderLeaderboard(): () => void {
     <main class="subpage-view leaderboard-view">
       ${homeLink()}
       <header class="subpage-header">
-        <p class="eyebrow">LOCAL RECORDS</p>
         <h1>리더보드</h1>
-        <p>학번별 최고 기록</p>
       </header>
       <section class="leaderboard-board" data-leaderboard-board aria-live="polite">
         <ol class="podium-list" data-podium-list aria-label="상위 3명"></ol>
