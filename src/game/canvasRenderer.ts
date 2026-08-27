@@ -49,43 +49,30 @@ function drawSky(
   viewportWidth: number,
 ): void {
   const sky = context.createLinearGradient(0, 0, 0, GROUND_Y);
-  sky.addColorStop(0, "#142b39");
-  sky.addColorStop(0.42, "#70485b");
-  sky.addColorStop(0.72, "#d56d63");
-  sky.addColorStop(1, "#f5ad78");
+  sky.addColorStop(0, "#62bce5");
+  sky.addColorStop(0.48, "#a9def0");
+  sky.addColorStop(0.78, "#dff1ed");
+  sky.addColorStop(1, "#ffe5ad");
   context.fillStyle = sky;
   context.fillRect(0, 0, viewportWidth, WORLD_HEIGHT);
-
-  const starAlpha = 0.28 + Math.min(0.42, state.score / 1200);
-  context.fillStyle = `rgba(255, 235, 185, ${starAlpha})`;
-  const stars: Array<readonly [number, number, number]> = [
-    [84, 72, 2], [174, 132, 1], [278, 61, 2], [382, 111, 1],
-    [505, 57, 1], [603, 136, 2], [744, 78, 1], [862, 121, 2],
-  ];
-  for (let offset = 0; offset < viewportWidth + 960; offset += 960) {
-    for (const [x, y, size] of stars) context.fillRect(x + offset, y, size, size);
-  }
 
   context.save();
   context.beginPath();
   const sunX = viewportWidth * 0.78;
-  context.arc(sunX, 255, 80, Math.PI, 0);
-  context.clip();
-  context.fillStyle = COLORS.cream;
-  context.fillRect(sunX - 80, 175, 160, 84);
-  context.fillStyle = "rgba(213, 109, 99, 0.38)";
-  for (let line = 0; line < 5; line += 1) {
-    context.fillRect(sunX - 78, 200 + line * 13, 158, 4);
-  }
+  context.arc(sunX, 106, 50, 0, Math.PI * 2);
+  context.shadowColor = "rgba(255, 222, 115, 0.58)";
+  context.shadowBlur = 34;
+  context.fillStyle = "#ffe58f";
+  context.fill();
   context.restore();
 
   const cloudShift = -((state.distance * 0.035) % 1080);
-  context.fillStyle = "rgba(255, 231, 181, 0.22)";
+  context.fillStyle = "rgba(255, 255, 255, 0.64)";
   for (let offset = -540; offset < viewportWidth + 540; offset += 540) {
     const x = cloudShift + offset;
-    context.fillRect(x + 38, 118, 94, 7);
-    context.fillRect(x + 58, 109, 54, 9);
-    context.fillRect(x + 76, 102, 25, 8);
+    context.fillRect(x + 38, 151, 104, 8);
+    context.fillRect(x + 58, 141, 63, 10);
+    context.fillRect(x + 79, 132, 29, 9);
   }
 }
 
@@ -102,11 +89,11 @@ function drawMountains(
     polygon(context, [
       [x - 40, GROUND_Y], [x + 72, 258], [x + 152, 368],
       [x + 238, 231], [x + 370, GROUND_Y],
-    ], "#665361");
+    ], "#9dbbc0");
     polygon(context, [
       [x + 38, GROUND_Y], [x + 153, 312], [x + 222, 391],
       [x + 304, 286], [x + 410, GROUND_Y],
-    ], "#3b4651");
+    ], "#779b9f");
   }
   context.restore();
 
@@ -118,7 +105,7 @@ function drawMountains(
     polygon(context, [
       [x - 30, GROUND_Y], [x + 68, 342], [x + 152, 401],
       [x + 242, 328], [x + 332, 391], [x + 450, GROUND_Y],
-    ], "#263c43");
+    ], "#4d7772");
   }
   context.restore();
 }
@@ -129,19 +116,19 @@ function drawGround(
   viewportWidth: number,
 ): void {
   const ground = context.createLinearGradient(0, GROUND_Y, 0, WORLD_HEIGHT);
-  ground.addColorStop(0, "#263f45");
-  ground.addColorStop(1, "#10252e");
+  ground.addColorStop(0, "#456d61");
+  ground.addColorStop(1, "#263f3c");
   context.fillStyle = ground;
   context.fillRect(0, GROUND_Y, viewportWidth, WORLD_HEIGHT - GROUND_Y);
-  context.fillStyle = COLORS.cream;
+  context.fillStyle = "#f6d68f";
   context.fillRect(0, GROUND_Y, viewportWidth, 4);
-  context.fillStyle = "rgba(255, 231, 181, 0.28)";
+  context.fillStyle = "rgba(246, 222, 165, 0.42)";
   const trackShift = -(state.distance % 96);
   for (let x = trackShift - 96; x < viewportWidth + 96; x += 96) {
     context.fillRect(x, GROUND_Y + 31, 20, 4);
     context.fillRect(x + 44, GROUND_Y + 66, 8, 3);
   }
-  context.fillStyle = "rgba(92, 184, 167, 0.12)";
+  context.fillStyle = "rgba(166, 224, 205, 0.18)";
   context.fillRect(0, GROUND_Y + 92, viewportWidth, 1);
 }
 
@@ -398,8 +385,8 @@ function drawVignette(
   const centerX = viewportWidth / 2;
   const radius = Math.max(590, viewportWidth * 0.62);
   const vignette = context.createRadialGradient(centerX, 260, 190, centerX, 270, radius);
-  vignette.addColorStop(0, "rgba(5, 17, 23, 0)");
-  vignette.addColorStop(1, "rgba(5, 17, 23, 0.34)");
+  vignette.addColorStop(0, "rgba(29, 76, 88, 0)");
+  vignette.addColorStop(1, "rgba(29, 76, 88, 0.14)");
   context.fillStyle = vignette;
   context.fillRect(0, 0, viewportWidth, WORLD_HEIGHT);
 }

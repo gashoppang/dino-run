@@ -126,10 +126,10 @@ a { color: inherit; }
   position: relative;
   min-height: 0;
   overflow: hidden;
-  background: #142b39;
+  background: #85d1ec;
   isolation: isolate;
 }
-.player-2p { border-top: 2px solid rgba(255, 231, 181, .66); }
+.player-2p { border-top: 2px solid rgba(23, 55, 62, .55); }
 .game-canvas { display: block; width: 100%; height: 100%; outline: none; touch-action: manipulation; }
 .game-canvas:focus-visible { box-shadow: inset 0 0 0 3px #ffe7b5; }
 .player-badge {
@@ -142,9 +142,9 @@ a { color: inherit; }
   gap: 10px;
   pointer-events: none;
 }
-.player-badge b { color: #fff0c9; font-size: clamp(1.3rem, 2.5vw, 2.1rem); letter-spacing: -.04em; }
-.player-badge span { color: rgba(255, 231, 181, .55); font: 700 .62rem/1 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .1em; }
-.player-2p .player-badge b { color: #8dd5c7; }
+.player-badge b { color: #17373e; font-size: clamp(1.3rem, 2.5vw, 2.1rem); letter-spacing: -.04em; }
+.player-badge span { color: rgba(23, 55, 62, .58); font: 700 .62rem/1 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .1em; }
+.player-2p .player-badge b { color: #276b68; }
 .hud {
   position: absolute;
   z-index: 2;
@@ -157,8 +157,8 @@ a { color: inherit; }
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
 }
 .hud-item { display: grid; gap: 2px; }
-.hud-item span { color: rgba(255, 231, 181, .56); font-size: clamp(.46rem, .9vw, .6rem); letter-spacing: .1em; }
-.hud-item strong { color: #fff0c9; font-size: clamp(.85rem, 1.7vw, 1.3rem); letter-spacing: .06em; }
+.hud-item span { color: rgba(23, 55, 62, .62); font-size: clamp(.46rem, .9vw, .6rem); letter-spacing: .1em; }
+.hud-item strong { color: #17373e; font-size: clamp(.85rem, 1.7vw, 1.3rem); letter-spacing: .06em; }
 .speed-chip {
   display: flex;
   align-items: center;
