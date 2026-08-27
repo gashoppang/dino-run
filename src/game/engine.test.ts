@@ -170,7 +170,7 @@ describe("game engine", () => {
 
   it("uses the configured item spawn cadence", () => {
     const state = createGameState();
-    expect(state.itemSpawnTimer).toBe(4);
+    expect(state.itemSpawnTimer).toBe(8);
     startGame(state);
     state.spawnTimer = 100;
     state.itemSpawnTimer = 0;

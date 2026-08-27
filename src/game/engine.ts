@@ -132,7 +132,7 @@ export function createGameState(bestScore = 0): GameState {
     distance: 0,
     speed: STARTING_SPEED,
     spawnTimer: 1.15,
-    itemSpawnTimer: 4,
+    itemSpawnTimer: 8,
     nextObstacleId: 1,
     nextItemId: 1,
     elapsed: 0,
