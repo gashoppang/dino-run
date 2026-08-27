@@ -7,7 +7,15 @@ import {
 } from "./canvasRenderer";
 import type { DestructionEffectState, ItemState, ObstacleState } from "./engine";
 
-function createContextMock(): CanvasRenderingContext2D {
+type MockContext = CanvasRenderingContext2D & {
+  fillRect: ReturnType<typeof vi.fn>;
+  lineTo: ReturnType<typeof vi.fn>;
+  moveTo: ReturnType<typeof vi.fn>;
+  scale: ReturnType<typeof vi.fn>;
+  translate: ReturnType<typeof vi.fn>;
+};
+
+function createContextMock(): MockContext {
   return {
     save: vi.fn(),
     restore: vi.fn(),
@@ -25,7 +33,7 @@ function createContextMock(): CanvasRenderingContext2D {
     shadowBlur: 0,
     shadowOffsetX: 0,
     shadowOffsetY: 0,
-  } as unknown as CanvasRenderingContext2D;
+  } as unknown as MockContext;
 }
 
 describe("standard canvas obstacle renderer", () => {
@@ -94,6 +102,44 @@ describe("standard canvas obstacle renderer", () => {
     expect(context.translate).toHaveBeenCalledOnce();
     expect(context.fill).toHaveBeenCalled();
     expect(context.restore).toHaveBeenCalledOnce();
+  });
+
+  it("keeps the item background centered on the icon", () => {
+    const context = createContextMock();
+    const item: ItemState = {
+      id: 1,
+      kind: "speed-self",
+      x: 640,
+      y: 300,
+      width: 50,
+      height: 50,
+    };
+
+    drawItem(context, item, 0);
+
+    expect(context.translate).toHaveBeenCalledWith(640, expect.any(Number));
+    expect(context.scale).toHaveBeenCalledWith(50 / 42, 50 / 42);
+    expect(context.fillRect).not.toHaveBeenCalled();
+    expect(context.moveTo.mock.calls[0]).toEqual([21, -2]);
+    expect(context.moveTo.mock.calls[1]).toEqual([21, 2]);
+  });
+
+  it("draws the same double-chevron icon for both speed boosts", () => {
+    const selfContext = createContextMock();
+    const rivalContext = createContextMock();
+    const baseItem: Omit<ItemState, "kind"> = {
+      id: 1,
+      x: 640,
+      y: 300,
+      width: 50,
+      height: 50,
+    };
+
+    drawItem(selfContext, { ...baseItem, kind: "speed-self" }, 0);
+    drawItem(rivalContext, { ...baseItem, kind: "speed-rival" }, 0);
+
+    expect(rivalContext.moveTo.mock.calls).toEqual(selfContext.moveTo.mock.calls);
+    expect(rivalContext.lineTo.mock.calls).toEqual(selfContext.lineTo.mock.calls);
   });
 
   it("draws giant-destruction pixel fragments", () => {

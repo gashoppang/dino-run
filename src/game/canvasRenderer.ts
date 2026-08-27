@@ -257,6 +257,14 @@ const ITEM_COLORS: Record<ItemState["kind"], string> = {
   wings: "#fff1c4",
 };
 
+function drawSpeedBoostIcon(
+  context: CanvasRenderingContext2D,
+  fill: string,
+): void {
+  polygon(context, [[5, 10], [11, 10], [22, 21], [11, 32], [5, 32], [16, 21]], fill);
+  polygon(context, [[18, 10], [24, 10], [35, 21], [24, 32], [18, 32], [29, 21]], fill);
+}
+
 export function drawItem(
   context: CanvasRenderingContext2D,
   item: ItemState,
@@ -268,9 +276,8 @@ export function drawItem(
   context.save();
   context.translate(Math.round(item.x), Math.round(item.y + bob));
   context.scale(item.width / artSize, item.height / artSize);
-  context.fillStyle = "rgba(11, 29, 37, 0.45)";
-  context.fillRect(4, 7, artSize, artSize);
-  polygon(context, [[center, 0], [artSize, center], [center, artSize], [0, center]], ITEM_COLORS[item.kind]);
+  polygon(context, [[center, -2], [artSize + 2, center], [center, artSize + 2], [-2, center]], "rgba(11, 29, 37, 0.62)");
+  polygon(context, [[center, 2], [artSize - 2, center], [center, artSize - 2], [2, center]], ITEM_COLORS[item.kind]);
   const iconColor = "rgba(18, 43, 52, 0.94)";
   const highlight = "rgba(255, 248, 218, 0.7)";
   context.fillStyle = iconColor;
@@ -291,9 +298,10 @@ export function drawItem(
     context.fillStyle = iconColor;
     context.fillRect(18, 28, 2, 4);
     context.fillRect(23, 28, 2, 4);
-  } else if (item.kind === "speed-self" || item.kind === "speed-rival") {
-    polygon(context, [[5, 10], [11, 10], [22, 21], [11, 32], [5, 32], [16, 21]], iconColor);
-    polygon(context, [[18, 10], [24, 10], [35, 21], [24, 32], [18, 32], [29, 21]], iconColor);
+  } else if (item.kind === "speed-self") {
+    drawSpeedBoostIcon(context, iconColor);
+  } else if (item.kind === "speed-rival") {
+    drawSpeedBoostIcon(context, iconColor);
   } else {
     context.fillRect(19, 14, 4, 23);
     polygon(context, [
