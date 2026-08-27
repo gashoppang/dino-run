@@ -168,6 +168,19 @@ describe("game engine", () => {
     expect(state.spawnTimer).toBe(0.72);
   });
 
+  it("waits longer between item spawns", () => {
+    const state = createGameState();
+    expect(state.itemSpawnTimer).toBe(8);
+    startGame(state);
+    state.spawnTimer = 100;
+    state.itemSpawnTimer = 0;
+
+    tickGame(state, 1 / 60, () => 0.5);
+
+    expect(state.items).toHaveLength(1);
+    expect(state.itemSpawnTimer).toBe(17);
+  });
+
   it("defers an item until it has a safe gap from an obstacle", () => {
     const state = createGameState();
     startGame(state);

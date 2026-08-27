@@ -132,7 +132,7 @@ export function createGameState(bestScore = 0): GameState {
     distance: 0,
     speed: STARTING_SPEED,
     spawnTimer: 1.15,
-    itemSpawnTimer: 5.5,
+    itemSpawnTimer: 8,
     nextObstacleId: 1,
     nextItemId: 1,
     elapsed: 0,
@@ -223,7 +223,7 @@ function getNextSpawnDelay(speed: number, random: () => number): number {
 }
 
 function getNextItemSpawnDelay(random: () => number): number {
-  return 8 + random() * 7;
+  return 13 + random() * 8;
 }
 
 function isHorizontallyNear(
