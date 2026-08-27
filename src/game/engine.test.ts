@@ -249,24 +249,24 @@ describe("game engine", () => {
     expect(state.itemSpawnTimer).toBe(5.5);
   });
 
-  it("reduces shield, giant, and wings odds in favor of speed items", () => {
+  it("gives shield, giant, and wings the same lower odds", () => {
     const counts = new Map<string, number>();
-    for (let slot = 0; slot < 16; slot += 1) {
+    for (let slot = 0; slot < 21; slot += 1) {
       const state = createGameState();
       startGame(state);
       state.spawnTimer = 100;
       state.itemSpawnTimer = 0;
-      const rolls = [(slot + 0.5) / 16, 0.5, 0.5];
+      const rolls = [(slot + 0.5) / 21, 0.5, 0.5];
       tickGame(state, 1 / 60, () => rolls.shift() ?? 0.5);
       const kind = state.items[0]!.kind;
       counts.set(kind, (counts.get(kind) ?? 0) + 1);
     }
 
     expect(counts.get("shield")).toBe(1);
-    expect(counts.get("giant")).toBe(3);
-    expect(counts.get("speed-self")).toBe(5);
-    expect(counts.get("speed-rival")).toBe(5);
-    expect(counts.get("wings")).toBe(2);
+    expect(counts.get("giant")).toBe(1);
+    expect(counts.get("wings")).toBe(1);
+    expect(counts.get("speed-self")).toBe(9);
+    expect(counts.get("speed-rival")).toBe(9);
   });
 
   it("defers an item until it has a safe gap from an obstacle", () => {
