@@ -203,7 +203,7 @@ export function applySpeedBoost(state: GameState, duration = 7): void {
   if (state.phase !== "running") return;
   const wasInactive = state.effects.speed <= 0;
   state.effects.speed = Math.max(state.effects.speed, duration);
-  if (wasInactive) state.spawnTimer += 0.65;
+  if (wasInactive) state.spawnTimer += 0.25;
 }
 
 export function takeCollectedItems(state: GameState): ItemKind[] {
@@ -223,7 +223,7 @@ function getNextSpawnDelay(speed: number, random: () => number): number {
 }
 
 function getNextItemSpawnDelay(random: () => number): number {
-  return 6 + random() * 4;
+  return 4 + random() * 3;
 }
 
 function isHorizontallyNear(
@@ -263,8 +263,8 @@ function spawnObstacle(state: GameState, random: () => number): void {
     height,
   });
 
-  const fairSpeedGap = state.effects.speed > 0 ? 1.42 : 1;
-  const minimumDelay = state.effects.speed > 0 ? 0.96 : MIN_SPAWN_DELAY;
+  const fairSpeedGap = state.effects.speed > 0 ? 1.16 : 1;
+  const minimumDelay = state.effects.speed > 0 ? 0.8 : MIN_SPAWN_DELAY;
   state.spawnTimer = Math.max(
     minimumDelay,
     getNextSpawnDelay(state.speed, random) * fairSpeedGap,

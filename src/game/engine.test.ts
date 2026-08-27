@@ -178,7 +178,7 @@ describe("game engine", () => {
     tickGame(state, 1 / 60, () => 0.5);
 
     expect(state.items).toHaveLength(1);
-    expect(state.itemSpawnTimer).toBe(8);
+    expect(state.itemSpawnTimer).toBe(5.5);
   });
 
   it("defers an item until it has a safe gap from an obstacle", () => {
@@ -293,13 +293,16 @@ describe("game engine", () => {
   it("boosts speed and increases the next obstacle gap", () => {
     const state = createGameState();
     startGame(state);
+    state.spawnTimer = 1;
     applySpeedBoost(state);
+    expect(state.spawnTimer).toBe(1.25);
     state.spawnTimer = 0;
     tickGame(state, 1 / 60, () => 0.5);
 
     expect(state.effects.speed).toBeGreaterThan(6.9);
     expect(state.speed).toBeGreaterThan(340);
-    expect(state.spawnTimer).toBeGreaterThan(1.7);
+    expect(state.spawnTimer).toBeGreaterThan(1.35);
+    expect(state.spawnTimer).toBeLessThan(1.5);
   });
 
   it("queues the rival speed item without boosting its collector", () => {
