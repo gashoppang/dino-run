@@ -168,9 +168,9 @@ describe("game engine", () => {
     expect(state.spawnTimer).toBe(0.72);
   });
 
-  it("waits longer between item spawns", () => {
+  it("uses the configured item spawn cadence", () => {
     const state = createGameState();
-    expect(state.itemSpawnTimer).toBe(8);
+    expect(state.itemSpawnTimer).toBe(4);
     startGame(state);
     state.spawnTimer = 100;
     state.itemSpawnTimer = 0;
@@ -178,7 +178,7 @@ describe("game engine", () => {
     tickGame(state, 1 / 60, () => 0.5);
 
     expect(state.items).toHaveLength(1);
-    expect(state.itemSpawnTimer).toBe(17);
+    expect(state.itemSpawnTimer).toBe(8);
   });
 
   it("defers an item until it has a safe gap from an obstacle", () => {
