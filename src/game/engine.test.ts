@@ -249,24 +249,24 @@ describe("game engine", () => {
     expect(state.itemSpawnTimer).toBe(5.5);
   });
 
-  it("makes giant the most common item and shield the rarest", () => {
+  it("reduces shield, giant, and wings odds in favor of speed items", () => {
     const counts = new Map<string, number>();
-    for (let slot = 0; slot < 15; slot += 1) {
+    for (let slot = 0; slot < 16; slot += 1) {
       const state = createGameState();
       startGame(state);
       state.spawnTimer = 100;
       state.itemSpawnTimer = 0;
-      const rolls = [(slot + 0.5) / 15, 0.5, 0.5];
+      const rolls = [(slot + 0.5) / 16, 0.5, 0.5];
       tickGame(state, 1 / 60, () => rolls.shift() ?? 0.5);
       const kind = state.items[0]!.kind;
       counts.set(kind, (counts.get(kind) ?? 0) + 1);
     }
 
     expect(counts.get("shield")).toBe(1);
-    expect(counts.get("giant")).toBe(5);
-    expect(counts.get("speed-self")).toBe(3);
-    expect(counts.get("speed-rival")).toBe(3);
-    expect(counts.get("wings")).toBe(3);
+    expect(counts.get("giant")).toBe(3);
+    expect(counts.get("speed-self")).toBe(5);
+    expect(counts.get("speed-rival")).toBe(5);
+    expect(counts.get("wings")).toBe(2);
   });
 
   it("defers an item until it has a safe gap from an obstacle", () => {
@@ -353,10 +353,31 @@ describe("game engine", () => {
     tickGame(state, 1 / 60, () => 0.5);
 
     expect(state.phase).toBe("running");
-    expect(state.effects.shield).toBe(8);
+    expect(state.effects.shield).toBe(6);
     expect(state.items).toHaveLength(0);
     expect(state.obstacles).toHaveLength(0);
     expect(takeCollectedItems(state)).toEqual(["shield"]);
+  });
+
+  it.each([
+    ["giant", 7],
+    ["wings", 7],
+  ] as const)("applies the shorter %s duration", (kind, duration) => {
+    const state = createGameState();
+    startGame(state);
+    state.itemSpawnTimer = 100;
+    state.items.push({
+      id: 1,
+      kind,
+      x: state.runner.x + 10,
+      y: state.runner.y + 10,
+      width: 50,
+      height: 50,
+    });
+
+    tickGame(state, 1 / 60, () => 0.5);
+
+    expect(state.effects[kind]).toBe(duration);
   });
 
   it("destroys collided obstacles while giant", () => {

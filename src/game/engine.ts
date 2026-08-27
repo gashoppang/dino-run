@@ -104,15 +104,16 @@ const WEIGHTED_ITEM_KINDS: ItemKind[] = [
   "giant",
   "giant",
   "giant",
-  "giant",
-  "giant",
+  "speed-self",
+  "speed-self",
   "speed-self",
   "speed-self",
   "speed-self",
   "speed-rival",
   "speed-rival",
   "speed-rival",
-  "wings",
+  "speed-rival",
+  "speed-rival",
   "wings",
   "wings",
 ];
@@ -354,11 +355,11 @@ function overlapsItem(runner: RunnerState, item: ItemState): boolean {
 
 function collectItem(state: GameState, kind: ItemKind): void {
   state.collectedItems.push(kind);
-  if (kind === "shield") state.effects.shield = 8;
-  else if (kind === "giant") state.effects.giant = 10;
+  if (kind === "shield") state.effects.shield = 6;
+  else if (kind === "giant") state.effects.giant = 7;
   else if (kind === "speed-self") applySpeedBoost(state);
   else if (kind === "wings") {
-    state.effects.wings = 10;
+    state.effects.wings = 7;
     state.runner.ducking = false;
     state.runner.height = RUNNER_HEIGHT;
     state.runner.grounded = false;
