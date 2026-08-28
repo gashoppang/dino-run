@@ -20,10 +20,9 @@ import { createCanvasRenderer } from "./game/canvasRenderer";
 import {
   clearLegacyLeaderboard,
   fetchLeaderboard,
-  getBestScoreForStudent,
-  getStudentLeaderboard,
+  getBestScoreForName,
+  getNameLeaderboard,
   normalizeName,
-  normalizeStudentId,
   recordLeaderboardScore,
   resetLeaderboard,
   type PlayerId,
@@ -36,7 +35,6 @@ interface PlayerController {
   id: PlayerId;
   state: GameState;
   isNewBest: boolean;
-  studentId: string;
   name: string;
   scoreRecorded: boolean;
   scoreSubmitting: boolean;
@@ -51,7 +49,6 @@ interface PlayerController {
   overlay: HTMLElement;
   overlayTitle: HTMLElement;
   overlayCopy: HTMLElement;
-  studentIdInput: HTMLInputElement;
   nameInput: HTMLInputElement;
   jumpButton: HTMLButtonElement;
   duckButton: HTMLButtonElement;
@@ -185,7 +182,6 @@ function createPlayerController(player: PlayerId): PlayerController {
     id: player,
     state: createGameState(bestScore),
     isNewBest: false,
-    studentId: "",
     name: "",
     scoreRecorded: false,
     scoreSubmitting: false,
@@ -200,7 +196,6 @@ function createPlayerController(player: PlayerId): PlayerController {
     overlay: requireElement("[data-overlay]", stage),
     overlayTitle: requireElement("[data-overlay-title]", stage),
     overlayCopy: requireElement("[data-overlay-copy]", stage),
-    studentIdInput: requireElement(`[data-student-id="${player}"]`, app),
     nameInput: requireElement(`[data-name="${player}"]`, app),
     jumpButton: requireElement("[data-jump]", stage),
     duckButton: requireElement("[data-duck]", stage),
@@ -233,7 +228,7 @@ function updatePlayerInterface(player: PlayerController): void {
       ? "기록을 저장하지 못했습니다"
       : player.isNewBest
         ? `${player.name}님의 신기록입니다`
-        : `${player.studentId} ${player.name}의 최고기록 ${state.bestScore}점`;
+        : `${player.name}님의 최고기록 ${state.bestScore}점`;
   }
 }
 
@@ -273,12 +268,10 @@ function mountGame(): () => void {
           <div class="identity-fields" data-identity-fields>
             <fieldset>
               <legend>1P</legend>
-              <label><span>학번</span><input data-student-id="1p" type="text" maxlength="16" inputmode="numeric" autocomplete="off" aria-describedby="identity-error"></label>
               <label><span>이름</span><input data-name="1p" type="text" maxlength="12" autocomplete="name" aria-describedby="identity-error"></label>
             </fieldset>
             <fieldset>
               <legend>2P</legend>
-              <label><span>학번</span><input data-student-id="2p" type="text" maxlength="16" inputmode="numeric" autocomplete="off" aria-describedby="identity-error"></label>
               <label><span>이름</span><input data-name="2p" type="text" maxlength="12" autocomplete="name" aria-describedby="identity-error"></label>
             </fieldset>
           </div>
@@ -305,9 +298,7 @@ function mountGame(): () => void {
 
   const clearIdentityForm = (): void => {
     for (const player of players) {
-      player.studentIdInput.value = "";
       player.nameInput.value = "";
-      player.studentIdInput.removeAttribute("aria-invalid");
       player.nameInput.removeAttribute("aria-invalid");
     }
     identityError.textContent = "";
@@ -316,22 +307,18 @@ function mountGame(): () => void {
   const readIdentityForm = (): boolean => {
     const identities = players.map((player) => ({
       player,
-      studentId: normalizeStudentId(player.studentIdInput.value),
       name: normalizeName(player.nameInput.value),
     }));
-    const invalid = identities.find(({ studentId, name }) => !studentId || !name);
+    const invalid = identities.find(({ name }) => !name);
     for (const identity of identities) {
-      identity.player.studentIdInput.toggleAttribute("aria-invalid", !identity.studentId);
       identity.player.nameInput.toggleAttribute("aria-invalid", !identity.name);
     }
     if (invalid) {
-      identityError.textContent = `${invalid.player.id === "1p" ? "1P" : "2P"}의 학번과 이름을 입력하세요.`;
-      (!invalid.studentId ? invalid.player.studentIdInput : invalid.player.nameInput)
-        .focus({ preventScroll: true });
+      identityError.textContent = `${invalid.player.id === "1p" ? "1P" : "2P"}의 이름을 입력하세요.`;
+      invalid.player.nameInput.focus({ preventScroll: true });
       return false;
     }
-    for (const { player, studentId, name } of identities) {
-      player.studentId = studentId;
+    for (const { player, name } of identities) {
       player.name = name;
     }
     identityError.textContent = "";
@@ -380,7 +367,6 @@ function mountGame(): () => void {
       if (canReplay) {
         for (const player of players) {
           resetGame(player.state);
-          player.studentId = "";
           player.name = "";
           player.scoreRecorded = false;
           player.scoreSubmitting = false;
@@ -412,7 +398,7 @@ function mountGame(): () => void {
       sharedButton.disabled = false;
       identityError.textContent = "";
       for (const player of players) {
-        player.state.bestScore = getBestScoreForStudent(leaderboard, player.studentId);
+        player.state.bestScore = getBestScoreForName(leaderboard, player.name);
         player.scoreRecorded = false;
         player.scoreSubmitting = false;
         player.scoreSaveFailed = false;
@@ -435,7 +421,6 @@ function mountGame(): () => void {
     player.scoreSubmitting = true;
     try {
       const saved = await recordLeaderboardScore({
-        studentId: player.studentId,
         name: player.name,
         score: player.state.score,
       });
@@ -532,12 +517,6 @@ function mountGame(): () => void {
   };
 
   for (const player of players) {
-    player.studentIdInput.addEventListener("input", () => {
-      if (normalizeStudentId(player.studentIdInput.value)) {
-        player.studentIdInput.removeAttribute("aria-invalid");
-        identityError.textContent = "";
-      }
-    });
     player.nameInput.addEventListener("input", () => {
       if (normalizeName(player.nameInput.value)) {
         player.nameInput.removeAttribute("aria-invalid");
@@ -606,7 +585,7 @@ function renderLeaderboard(): () => void {
     isLoading = true;
     let scores;
     try {
-      scores = getStudentLeaderboard(
+      scores = getNameLeaderboard(
         await fetchLeaderboard(abortController.signal),
       ).slice(0, 10);
     } catch {
@@ -627,7 +606,7 @@ function renderLeaderboard(): () => void {
     podium.innerHTML = topScores.map((entry, index) => `
       <li class="podium-card" data-rank="${index + 1}">
         <span class="podium-rank">${index + 1}등</span>
-        <span class="podium-name"><b>${escapeHtml(entry.name)}</b><small>${entry.studentId ? escapeHtml(entry.studentId) : "이전 기록"}</small></span>
+        <span class="podium-name"><b>${escapeHtml(entry.name)}</b></span>
         <strong>${formatScore(entry.score)}</strong>
       </li>
     `).join("");
@@ -635,7 +614,7 @@ function renderLeaderboard(): () => void {
     list.innerHTML = remainingScores.length > 0 ? remainingScores.map((entry, index) => `
       <li class="score-row">
         <span class="rank">${String(index + 4).padStart(2, "0")}</span>
-        <span class="score-name"><b>${escapeHtml(entry.name)}</b><small>${entry.studentId ? escapeHtml(entry.studentId) : "이전 기록"}</small></span>
+        <span class="score-name"><b>${escapeHtml(entry.name)}</b></span>
         <strong>${formatScore(entry.score)}</strong>
       </li>
     `).join("") : scores.length === 0 ? `

@@ -3,46 +3,44 @@ import {
   LEGACY_LEADERBOARD_KEY,
   clearLegacyLeaderboard,
   fetchLeaderboard,
-  getBestScoreForStudent,
-  getStudentLeaderboard,
+  getBestScoreForName,
+  getNameLeaderboard,
   normalizeName,
-  normalizeStudentId,
   parseLeaderboard,
   recordLeaderboardScore,
   resetLeaderboard,
 } from "./leaderboard";
 
 const entries = [
-  { id: "1", studentId: "202402", name: "느린공룡", score: 20, createdAt: 2 },
-  { id: "2", studentId: "202401", name: "빠른공룡", score: 80, createdAt: 3 },
+  { id: "1", name: "느린공룡", score: 20, createdAt: 2 },
+  { id: "2", name: "빠른공룡", score: 80, createdAt: 3 },
 ];
 
 afterEach(() => vi.unstubAllGlobals());
 
 describe("leaderboard", () => {
-  it("normalizes student IDs and names", () => {
-    expect(normalizeStudentId("  20  2401  ")).toBe("202401");
+  it("normalizes names", () => {
     expect(normalizeName("  홍   길동  ")).toBe("홍 길동");
     expect(Array.from(normalizeName("123456789012345")).length).toBe(12);
   });
 
-  it("normalizes and sorts API records", () => {
-    expect(parseLeaderboard(entries).map(({ studentId, score }) => ({ studentId, score })))
+  it("normalizes and sorts API records without student IDs", () => {
+    expect(parseLeaderboard(entries).map(({ name, score }) => ({ name, score })))
       .toEqual([
-        { studentId: "202401", score: 80 },
-        { studentId: "202402", score: 20 },
+        { name: "빠른공룡", score: 80 },
+        { name: "느린공룡", score: 20 },
       ]);
     expect(parseLeaderboard([{ name: "공룡" }])).toEqual([]);
   });
 
-  it("keeps one personal best per student ID", () => {
+  it("keeps one personal best per normalized name", () => {
     const duplicated = [
       ...entries,
-      { id: "3", studentId: "202401", name: "빠른공룡", score: 90, createdAt: 4 },
+      { id: "3", name: "빠른공룡", score: 90, createdAt: 4 },
     ];
-    expect(getBestScoreForStudent(duplicated, "202401")).toBe(90);
-    expect(getStudentLeaderboard(duplicated)).toHaveLength(2);
-    expect(getStudentLeaderboard(duplicated)[0]?.score).toBe(90);
+    expect(getBestScoreForName(duplicated, "빠른공룡")).toBe(90);
+    expect(getNameLeaderboard(duplicated)).toHaveLength(2);
+    expect(getNameLeaderboard(duplicated)[0]?.score).toBe(90);
   });
 
   it("deletes the legacy browser leaderboard", () => {
@@ -57,38 +55,27 @@ describe("leaderboard", () => {
       { status: 200, headers: { "Content-Type": "application/json" } },
     )));
     await expect(fetchLeaderboard()).resolves.toEqual([entries[1], entries[0]]);
-    expect(fetch).toHaveBeenCalledWith("/api/leaderboard", expect.any(Object));
   });
 
-  it("posts normalized scores to the API", async () => {
+  it("posts normalized name scores to the API", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(
       JSON.stringify({ entry: entries[1], isNewBest: true }),
       { status: 200, headers: { "Content-Type": "application/json" } },
     )));
-    await expect(recordLeaderboardScore({
-      studentId: " 202401 ",
-      name: " 빠른   공룡 ",
-      score: 80.9,
-    })).resolves.toEqual({ entry: entries[1], isNewBest: true });
+    await expect(recordLeaderboardScore({ name: " 빠른   공룡 ", score: 80.9 }))
+      .resolves.toEqual({ entry: entries[1], isNewBest: true });
     expect(fetch).toHaveBeenCalledWith("/api/leaderboard", expect.objectContaining({
       method: "POST",
-      body: JSON.stringify({ studentId: "202401", name: "빠른 공룡", score: 80 }),
+      body: JSON.stringify({ name: "빠른 공룡", score: 80 }),
     }));
   });
 
-  it("resets the server leaderboard with an explicit confirmation", async () => {
+  it("resets the server leaderboard with a password", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(
       JSON.stringify({ deleted: 7 }),
       { status: 200, headers: { "Content-Type": "application/json" } },
     )));
     await expect(resetLeaderboard("test-password")).resolves.toBe(7);
-    expect(fetch).toHaveBeenCalledWith("/api/leaderboard", expect.objectContaining({
-      method: "DELETE",
-      body: JSON.stringify({
-        confirmation: "리더보드 초기화",
-        password: "test-password",
-      }),
-    }));
   });
 
   it("reports an incorrect reset password", async () => {

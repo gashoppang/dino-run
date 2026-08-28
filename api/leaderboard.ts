@@ -51,7 +51,6 @@ function normalizeScore(value: unknown): number | undefined {
 function serializeRow(row: ScoreRow) {
   return {
     id: String(row.id),
-    studentId: row.name,
     name: row.name,
     score: row.score,
     createdAt: row.created_at.getTime(),
@@ -137,47 +136,6 @@ export async function POST(request: Request): Promise<Response> {
   } catch (error) {
     console.error("Leaderboard API error", error);
     return json({ error: "리더보드 서버에 연결하지 못했습니다." }, 503);
-  }
-}
-
-export async function PATCH(request: Request): Promise<Response> {
-  try {
-    if (!isSameOrigin(request)) {
-      return json({ error: "허용되지 않은 복구 요청입니다." }, 403);
-    }
-    const body = await readBody(request);
-    const resetPassword = process.env.LEADERBOARD_RESET_PASSWORD;
-    if (!resetPassword || body?.password !== resetPassword) {
-      return json({ error: "비밀번호가 올바르지 않습니다." }, 401);
-    }
-    if (body?.action !== "migrate-to-name") {
-      return json({ error: "지원하지 않는 복구 요청입니다." }, 400);
-    }
-
-    const database = getSql();
-    const migrated = await database.begin(async (transaction) => {
-      await transaction`
-        WITH ranked AS (
-          SELECT id, ROW_NUMBER() OVER (
-            PARTITION BY LOWER(name)
-            ORDER BY score DESC, updated_at ASC, id ASC
-          ) AS rank
-          FROM leaderboard_scores
-        )
-        DELETE FROM leaderboard_scores AS scores
-        USING ranked
-        WHERE scores.id = ranked.id AND ranked.rank > 1
-      `;
-      return transaction<{ id: string }[]>`
-        UPDATE leaderboard_scores
-        SET student_id = LOWER(name)
-        RETURNING id
-      `;
-    });
-    return json({ migrated: migrated.length });
-  } catch (error) {
-    console.error("Leaderboard migration error", error);
-    return json({ error: "리더보드 기록을 복구하지 못했습니다." }, 503);
   }
 }
 
