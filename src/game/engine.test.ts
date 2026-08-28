@@ -287,14 +287,25 @@ describe("game engine", () => {
     expect(state.spawnTimer).toBe(1.2);
   });
 
-  it("allows the base speed to grow up to the doubled cap", () => {
+  it("allows the base speed to grow up to the tripled cap", () => {
     const state = createGameState();
     startGame(state);
     state.score = 1_000_000;
 
     tickGame(state, 1 / 60, () => 0.5);
 
-    expect(state.speed).toBe(1440);
+    expect(state.speed).toBe(2160);
+  });
+
+  it("applies the stronger boost multiplier at top speed", () => {
+    const state = createGameState();
+    startGame(state);
+    state.score = 1_000_000;
+    applySpeedBoost(state);
+
+    tickGame(state, 1 / 60, () => 0.5);
+
+    expect(state.speed).toBe(3240);
   });
 
   it("uses the configured item spawn cadence", () => {
