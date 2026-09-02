@@ -294,7 +294,6 @@ function mountGame(): () => void {
   const sharedCopy = requireElement<HTMLElement>("[data-shared-copy]", sharedControl);
   let previousTime = performance.now();
   let animationFrame = 0;
-  let isLeaderboardBusy = false;
 
   const clearIdentityForm = (): void => {
     for (const player of players) {
@@ -354,8 +353,7 @@ function mountGame(): () => void {
     }
   };
 
-  const startOrResumeRound = async (): Promise<void> => {
-    if (isLeaderboardBusy) return;
+  const startOrResumeRound = (): void => {
     const hasPausedPlayer = players.some((player) => player.state.phase === "paused");
     if (hasPausedPlayer) {
       players.forEach((player) => resumeGame(player.state));
@@ -382,23 +380,10 @@ function mountGame(): () => void {
       }
       if (!canStart) return;
       if (!readIdentityForm()) return;
-      isLeaderboardBusy = true;
-      sharedButton.disabled = true;
-      identityError.textContent = "기록을 불러오는 중입니다.";
-      let leaderboard;
-      try {
-        leaderboard = await fetchLeaderboard();
-      } catch {
-        identityError.textContent = "리더보드를 불러오지 못했습니다. 다시 시도하세요.";
-        isLeaderboardBusy = false;
-        sharedButton.disabled = false;
-        return;
-      }
-      isLeaderboardBusy = false;
-      sharedButton.disabled = false;
       identityError.textContent = "";
+      const roundNames = players.map((player) => player.name);
       for (const player of players) {
-        player.state.bestScore = getBestScoreForName(leaderboard, player.name);
+        player.state.bestScore = 0;
         player.scoreRecorded = false;
         player.scoreSubmitting = false;
         player.scoreSaveFailed = false;
@@ -406,6 +391,17 @@ function mountGame(): () => void {
         startGame(player.state);
         updatePlayerInterface(player);
       }
+      void fetchLeaderboard()
+        .then((leaderboard) => {
+          players.forEach((player, index) => {
+            if (player.name !== roundNames[index] || player.scoreRecorded) return;
+            player.state.bestScore = getBestScoreForName(leaderboard, player.name);
+            if (player.state.phase === "gameOver") updatePlayerInterface(player);
+          });
+        })
+        .catch(() => {
+          // The game remains playable when the leaderboard database is unavailable.
+        });
       if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     }
     previousTime = performance.now();
